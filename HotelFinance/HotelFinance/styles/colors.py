@@ -1,0 +1,23 @@
+# Application Colors
+
+BACKGROUND = "#121212"
+
+SIDEBAR = "#181818"
+
+CARD = "#1F1F1F"
+
+ACCENT = "#3B82F6"
+
+SUCCESS = "#22C55E"
+
+WARNING = "#F59E0B"
+
+DANGER = "#EF4444"
+
+TEXT = "#F5F5F5"
+
+SUBTEXT = "#A1A1AA"
+
+BORDER = "#2A2A2A"
+
+HOVER = "#2D2D2D"

@@ -1,0 +1,21 @@
+QListWidget {
+    background: #181818;
+    border: none;
+    outline: none;
+    padding: 12px;
+}
+
+QListWidget::item {
+    height: 42px;
+    border-radius: 8px;
+    padding-left: 12px;
+    margin-bottom: 4px;
+}
+
+QListWidget::item:hover {
+    background: #2D2D2D;
+}
+
+QListWidget::item:selected {
+    background: #3B82F6;
+}

@@ -1,11 +1,7 @@
-from app.database.connection import test_connection
-from app.database.init_db import create_tables
+import sys
 
-
-def main():
-    if test_connection():
-        create_tables()
+from app.core.app import run
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(run())

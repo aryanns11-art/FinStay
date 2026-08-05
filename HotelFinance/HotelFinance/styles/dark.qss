@@ -1,0 +1,26 @@
+QWidget {
+    background-color: #121212;
+    color: #F5F5F5;
+    font-family: "Segoe UI";
+}
+
+QMainWindow {
+    background-color: #121212;
+}
+
+QListWidget {
+    background-color: #181818;
+    border: none;
+}
+
+QListWidget::item {
+    padding: 10px;
+}
+
+QListWidget::item:selected {
+    background-color: #3B82F6;
+}
+
+QStatusBar {
+    background-color: #181818;
+}
