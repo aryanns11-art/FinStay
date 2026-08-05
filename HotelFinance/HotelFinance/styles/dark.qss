@@ -1,26 +1,233 @@
+/* ==========================================================
+   Global
+========================================================== */
+
 QWidget {
     background-color: #121212;
     color: #F5F5F5;
     font-family: "Segoe UI";
+    font-size: 10pt;
 }
 
 QMainWindow {
     background-color: #121212;
 }
 
-QListWidget {
+
+/* ==========================================================
+   Sidebar
+========================================================== */
+
+QFrame#sidebar {
+    background-color: #181818;
+    border-right: 1px solid #2A2A2A;
+}
+
+
+/* ==========================================================
+   Navigation Buttons
+========================================================== */
+
+QPushButton {
+    background-color: transparent;
+    color: #F5F5F5;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #2D2D2D;
+}
+
+QPushButton:checked {
+    background-color: #3B82F6;
+    color: white;
+}
+
+
+/* ==========================================================
+   Labels
+========================================================== */
+
+QLabel {
+    background: transparent;
+    color: #F5F5F5;
+}
+
+
+/* ==========================================================
+   Status Bar
+========================================================== */
+
+QStatusBar {
+    background-color: #181818;
+    color: #F5F5F5;
+    border-top: 1px solid #2A2A2A;
+}
+
+
+/* ==========================================================
+   Statistic Cards
+========================================================== */
+
+QFrame#statCard {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 14px;
+}
+
+QFrame#statCard:hover {
+    border: 1px solid #3B82F6;
+}
+
+QLabel#cardTitle {
+    color: #A1A1AA;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+QLabel#cardValue {
+    color: #FFFFFF;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+
+/* ==========================================================
+   Line Edit
+========================================================== */
+
+QLineEdit {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+QLineEdit:focus {
+    border: 1px solid #3B82F6;
+}
+
+
+/* ==========================================================
+   Combo Box
+========================================================== */
+
+QComboBox {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+QComboBox:focus {
+    border: 1px solid #3B82F6;
+}
+
+
+/* ==========================================================
+   Table Widget
+========================================================== */
+
+QTableWidget {
+    background-color: #1F1F1F;
+    border: none;
+    gridline-color: #2A2A2A;
+    selection-background-color: #3B82F6;
+}
+
+QHeaderView::section {
+    background-color: #181818;
+    color: #F5F5F5;
+    border: none;
+    padding: 8px;
+}
+
+
+/* ==========================================================
+   Scroll Bars
+========================================================== */
+
+QScrollBar:vertical {
+    background: #181818;
+    width: 10px;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background: #3A3A3A;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #555555;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background: #181818;
+    height: 10px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #3A3A3A;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+/* ===========================
+   Transaction Table
+=========================== */
+
+QTableWidget {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+    gridline-color: #2A2A2A;
+    alternate-background-color: #181818;
+    selection-background-color: #3B82F6;
+}
+
+QHeaderView::section {
+    background-color: #181818;
+    color: white;
+    padding: 10px;
+    border: none;
+    font-weight: bold;
+}
+
+QTableCornerButton::section {
     background-color: #181818;
     border: none;
 }
 
-QListWidget::item {
-    padding: 10px;
+
+QFormLayout {
+    spacing: 12px;
 }
 
-QListWidget::item:selected {
-    background-color: #3B82F6;
+QLabel {
+    font-size: 13px;
 }
 
-QStatusBar {
-    background-color: #181818;
+QComboBox,
+QDateEdit,
+QTimeEdit,
+QDoubleSpinBox,
+QLineEdit {
+
+    min-height: 38px;
+    padding-left: 8px;
+
 }

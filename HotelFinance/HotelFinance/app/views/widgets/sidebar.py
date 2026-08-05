@@ -1,7 +1,10 @@
-from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame,
+    QLabel,
+    QVBoxLayout,
+)
 
 from app.views.widgets.navigation_button import NavigationButton
-
 
 class Sidebar(QFrame):
 
@@ -29,44 +32,44 @@ class Sidebar(QFrame):
 
         layout.addSpacing(20)
 
-        self.dashboard = NavigationButton(
+        self.dashboard_btn = NavigationButton(
             "Dashboard",
             "fa5s.home",
         )
 
-        self.transaction = NavigationButton(
+        self.transactions_btn = NavigationButton(
             "Transactions",
             "fa5s.wallet",
         )
 
-        self.cash = NavigationButton(
+        self.cash_btn = NavigationButton(
             "Cash Counter",
-            "fa5s.money-bill-wave",
+            "fa5s.cash-register",
         )
 
-        self.report = NavigationButton(
+        self.reports_btn = NavigationButton(
             "Reports",
             "fa5s.chart-bar",
         )
 
-        self.settings = NavigationButton(
+        self.settings_btn = NavigationButton(
             "Settings",
             "fa5s.cog",
         )
 
-        self.exit = NavigationButton(
+        self.exit_btn = NavigationButton(
             "Exit",
             "fa5s.sign-out-alt",
         )
 
-        self.dashboard.setChecked(True)
+        self.dashboard_btn.setChecked(True)
 
-        layout.addWidget(self.dashboard)
-        layout.addWidget(self.transaction)
-        layout.addWidget(self.cash)
-        layout.addWidget(self.report)
-        layout.addWidget(self.settings)
+        layout.addWidget(self.dashboard_btn)
+        layout.addWidget(self.transactions_btn)
+        layout.addWidget(self.cash_btn)
+        layout.addWidget(self.reports_btn)
+        layout.addWidget(self.settings_btn)
 
         layout.addStretch()
 
-        layout.addWidget(self.exit)
+        layout.addWidget(self.exit_btn)

@@ -6,10 +6,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.views.pages.dashboard_page import DashboardPage
 from app.views.widgets.sidebar import Sidebar
-from app.views.widgets.statusbar import StatusBar
 from app.views.widgets.topbar import TopBar
+from app.views.widgets.statusbar import StatusBar
+
+from app.views.pages.dashboard_page import DashboardPage
+from app.views.pages.transaction_page import TransactionPage
+from app.views.pages.cash_page import CashPage
+from app.views.pages.reports_page import ReportsPage
+from app.views.pages.settings_page import SettingsPage
 
 
 class MainWindow(QMainWindow):
@@ -53,7 +58,60 @@ class MainWindow(QMainWindow):
         right_container.setLayout(right_layout)
 
         main_layout.addWidget(right_container)
+        main_layout.setStretch(1, 1)
 
-        self.stack.addWidget(DashboardPage())
+        self.dashboard_page = DashboardPage()
+        self.transaction_page = TransactionPage()
+        self.cash_page = CashPage()
+        self.reports_page = ReportsPage()
+        self.settings_page = SettingsPage()
 
-        self.setStatusBar(StatusBar())
+        self.stack.addWidget(self.dashboard_page)
+        self.stack.addWidget(self.transaction_page)
+        self.stack.addWidget(self.cash_page)
+        self.stack.addWidget(self.reports_page)
+        self.stack.addWidget(self.settings_page)
+        
+        self.stack.setCurrentIndex(0)
+
+        self.statusbar = StatusBar()
+        self.setStatusBar(self.statusbar)
+
+        self.connect_signals()
+
+    def connect_signals(self):
+        self.sidebar.dashboard_btn.clicked.connect(
+            lambda: self.change_page(0)
+        )
+
+        self.sidebar.transactions_btn.clicked.connect(
+            lambda: self.change_page(1)
+        )
+
+        self.sidebar.cash_btn.clicked.connect(
+            lambda: self.change_page(2)
+        )
+
+        self.sidebar.reports_btn.clicked.connect(
+            lambda: self.change_page(3)
+        )
+
+        self.sidebar.settings_btn.clicked.connect(
+            lambda: self.change_page(4)
+        )
+
+    def change_page(self, index: int):
+        self.stack.setCurrentIndex(index)
+
+        buttons = [
+            self.sidebar.dashboard_btn,
+            self.sidebar.transactions_btn,
+            self.sidebar.cash_btn,
+            self.sidebar.reports_btn,
+            self.sidebar.settings_btn,
+        ]
+
+        for button in buttons:
+            button.setChecked(False)
+
+        buttons[index].setChecked(True)
