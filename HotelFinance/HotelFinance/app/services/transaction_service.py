@@ -1,3 +1,4 @@
+from ast import keyword
 from decimal import Decimal
 
 from app.database.repositories.transaction_repository import TransactionRepository
@@ -26,3 +27,9 @@ class TransactionService:
 
     def get_today_expense(self, today):
         return self.repository.get_expense_total(today)
+
+    def search_transactions(self, keyword):
+        return self.repository.search(keyword)
+
+    def get_transactions_by_type(self, transaction_type):
+        return self.repository.get_by_type(transaction_type)

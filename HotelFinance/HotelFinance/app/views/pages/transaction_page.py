@@ -64,8 +64,13 @@ class TransactionPage(QWidget):
         toolbar_layout = QHBoxLayout()
 
         self.search_edit = QLineEdit()
+
         self.search_edit.setPlaceholderText(
             "Search transactions..."
+        )
+
+        self.search_edit.textChanged.connect(
+            self.search_transactions
         )
 
         self.filter_combo = QComboBox()
@@ -75,6 +80,9 @@ class TransactionPage(QWidget):
                 "Income",
                 "Expense",
             ]
+        )
+        self.filter_combo.currentTextChanged.connect(
+            self.filter_transactions
         )
 
         self.add_button = QPushButton("+ Add Transaction")
@@ -162,6 +170,68 @@ class TransactionPage(QWidget):
         """Load all transactions into the table."""
 
         transactions = self.transaction_controller.get_transactions()
+        self.populate_table(transactions)
+
+
+    def search_transactions(self, text):
+
+        text = text.strip()
+
+        if not text:
+            self.load_transactions()
+            return
+
+        transactions = (
+            self.transaction_controller.search_transactions(text)
+        )
+
+        self.populate_table(transactions)
+
+        
+    def delete_transaction(self):
+
+        row = self.table.currentRow()
+
+        if row < 0:
+            QMessageBox.warning(
+                self,
+                "No Selection",
+                "Please select a transaction first."
+            )
+            return
+
+
+        transaction_id = self.table.item(
+            row,
+            0
+        ).data(Qt.UserRole)
+
+
+        transaction = (
+            self.session.query(Transaction)
+            .filter(Transaction.id == transaction_id)
+            .first()
+        )
+
+
+        if transaction:
+
+            confirm = QMessageBox.question(
+                self,
+                "Confirm Delete",
+                "Delete this transaction?"
+            )
+
+
+            if confirm == QMessageBox.Yes:
+
+                self.transaction_controller.delete_transaction(
+                    transaction
+                )
+
+                self.load_transactions()
+
+    def populate_table(self, transactions):
 
         self.table.clearContents()
         self.table.clearSpans()
@@ -229,6 +299,7 @@ class TransactionPage(QWidget):
 
         if not transactions:
             self.table.setRowCount(1)
+            self.table.clearSelection()
             self.table.setItem(
                 0,
                 0,
@@ -236,45 +307,17 @@ class TransactionPage(QWidget):
             )
             self.table.setSpan(0, 0, 1, 6)
 
-    def delete_transaction(self):
-
-        row = self.table.currentRow()
-
-        if row < 0:
-            QMessageBox.warning(
-                self,
-                "No Selection",
-                "Please select a transaction first."
-            )
+    def filter_transactions(self, transaction_type):
+        """Filter transactions by type."""
+    
+        if transaction_type == "All":
+            self.load_transactions()
             return
-
-
-        transaction_id = self.table.item(
-            row,
-            0
-        ).data(Qt.UserRole)
-
-
-        transaction = (
-            self.session.query(Transaction)
-            .filter(Transaction.id == transaction_id)
-            .first()
-        )
-
-
-        if transaction:
-
-            confirm = QMessageBox.question(
-                self,
-                "Confirm Delete",
-                "Delete this transaction?"
+    
+        transactions = (
+            self.transaction_controller.get_transactions_by_type(
+                transaction_type
             )
-
-
-            if confirm == QMessageBox.Yes:
-
-                self.transaction_controller.delete_transaction(
-                    transaction
-                )
-
-                self.load_transactions()
+        )
+    
+        self.populate_table(transactions)

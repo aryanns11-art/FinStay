@@ -22,3 +22,9 @@ class TransactionController:
 
     def delete_transaction(self, transaction):
         self.service.delete_transaction(transaction)
+
+    def search_transactions(self, keyword):
+        return self.service.search_transactions(keyword)
+
+    def get_transactions_by_type(self, transaction_type):
+        return self.service.get_transactions_by_type(transaction_type)
