@@ -48,3 +48,19 @@ class TransactionService:
 
     def get_online_expense(self, today):
         return self.repository.get_online_expense_total(today)
+    
+
+    def get_income_transaction_count(self, today):
+        return self.repository.get_income_transaction_count(today)
+
+    def get_expense_transaction_count(self, today):
+        return self.repository.get_expense_transaction_count(today)
+
+
+    def get_highest_income_transaction(self, today):
+        return self.repository.get_highest_income_transaction(today)
+
+    def get_highest_expense_transaction(self, today):
+        return self.repository.get_highest_expense_transaction(today)
+
+

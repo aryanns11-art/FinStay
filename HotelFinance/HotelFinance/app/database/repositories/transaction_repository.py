@@ -174,3 +174,57 @@ class TransactionRepository(BaseRepository):
         )
 
         return result or Decimal("0.00")
+
+    def get_income_transaction_count(self, transaction_date: date):
+        """Return today's income transaction count."""
+
+        return (
+            self.session.query(Transaction)
+            .join(Category)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Income",
+            )
+            .count()
+        )
+
+    def get_expense_transaction_count(self, transaction_date: date):
+        """Return today's expense transaction count."""
+
+        return (
+            self.session.query(Transaction)
+            .join(Category)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Expense",
+            )
+            .count()
+        )
+
+    def get_highest_income_transaction(self, transaction_date: date):
+        """Return today's highest income transaction."""
+    
+        return (
+            self.session.query(Transaction)
+            .join(Category)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Income",
+            )
+            .order_by(Transaction.amount.desc())
+            .first()
+        )
+    
+    def get_highest_expense_transaction(self, transaction_date: date):
+        """Return today's highest expense transaction."""
+    
+        return (
+            self.session.query(Transaction)
+            .join(Category)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Expense",
+            )
+            .order_by(Transaction.amount.desc())
+            .first()
+        )
