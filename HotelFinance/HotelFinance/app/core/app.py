@@ -4,6 +4,9 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from app.views.main_window import MainWindow
+from app.database.session import get_session
+from app.database.seed import seed_database
+from app.database.init_db import create_tables
 
 
 def load_theme(app: QApplication):
@@ -21,7 +24,17 @@ def run():
 
     load_theme(app)
 
-    window = MainWindow()
+    create_tables()
+
+    # Create one database session for the application   
+    session = get_session()
+    seed_database(session)
+
+    window = MainWindow(session)
     window.show()
 
-    return app.exec()
+    exit_code = app.exec()
+
+    session.close()
+
+    return exit_code

@@ -1,125 +1,145 @@
-from PySide6.QtCore import QDate, QTime
+from datetime import datetime
+
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QHBoxLayout,
-    QFormLayout,
     QComboBox,
-    QDoubleSpinBox,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
-    QDateEdit,
-    QTimeEdit,
     QPushButton,
-    QFrame,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    QHeaderView,
 )
+
+from app.views.dialogs.transaction_dialog import TransactionDialog
 
 
 class TransactionPage(QWidget):
+    """Transactions page."""
 
-    def __init__(self):
+    def __init__(self,session):
         super().__init__()
+
+        self.session = session
 
         self.init_ui()
 
     def init_ui(self):
-
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
 
-        # ================= Header =================
+        # =====================================================
+        # Header
+        # =====================================================
 
-        header = QLabel("Transactions")
-        header.setObjectName("pageTitle")
+        header_layout = QHBoxLayout()
 
-        main_layout.addWidget(header)
+        title = QLabel("Transactions")
+        title.setObjectName("pageTitle")
 
-        # ================= Form Card =================
+        date_label = QLabel(
+            datetime.now().strftime("%A, %d %b %Y")
+        )
+        date_label.setObjectName("dateLabel")
 
-        form_card = QFrame()
-        form_card.setObjectName("statCard")
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header_layout.addWidget(date_label)
 
-        form_layout = QFormLayout(form_card)
+        main_layout.addLayout(header_layout)
 
-        form_layout.setSpacing(15)
+        # =====================================================
+        # Toolbar
+        # =====================================================
 
-        # Category
+        toolbar_layout = QHBoxLayout()
 
-        self.category_combo = QComboBox()
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(
+            "Search transactions..."
+        )
 
-        self.category_combo.addItems([
-            "Business",
-            "Employee Salary",
-            "Personal",
-            "Education",
-            "Maintenance",
-            "Electricity",
-            "Water",
-            "Food",
-            "Fuel",
-            "Other",
-        ])
+        self.filter_combo = QComboBox()
+        self.filter_combo.addItems(
+            [
+                "All",
+                "Income",
+                "Expense",
+            ]
+        )
 
-        # Type
+        self.add_button = QPushButton("+ Add Transaction")
 
-        self.type_combo = QComboBox()
+        self.add_button.clicked.connect(
+            self.open_transaction_dialog
+        )
 
-        self.type_combo.addItems([
-            "Income",
-            "Expense",
-        ])
+        toolbar_layout.addWidget(self.search_edit)
 
-        # Amount
+        toolbar_layout.addWidget(self.filter_combo)
 
-        self.amount_spin = QDoubleSpinBox()
+        toolbar_layout.addStretch()
 
-        self.amount_spin.setMaximum(100000000)
+        toolbar_layout.addWidget(self.add_button)
 
-        self.amount_spin.setPrefix("₹ ")
+        main_layout.addLayout(toolbar_layout)
 
-        self.amount_spin.setDecimals(2)
+        # =====================================================
+        # Transactions Table
+        # =====================================================
 
-        # Payment Method
+        self.table = QTableWidget()
 
-        self.payment_combo = QComboBox()
+        self.table.setColumnCount(6)
 
-        self.payment_combo.addItems([
-            "Cash",
-            "UPI",
-            "Bank Transfer",
-            "Card",
-        ])
+        self.table.setHorizontalHeaderLabels(
+            [
+                "Date",
+                "Time",
+                "Category",
+                "Amount",
+                "Payment",
+                "Description",
+            ]
+        )
 
-        # Description
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )
 
-        self.description_edit = QLineEdit()
+        self.table.verticalHeader().setVisible(False)
 
-        # Date
+        self.table.setSelectionBehavior(
+            QTableWidget.SelectRows
+        )
 
-        self.date_edit = QDateEdit()
+        self.table.setEditTriggers(
+            QTableWidget.NoEditTriggers
+        )
 
-        self.date_edit.setCalendarPopup(True)
+        self.table.setAlternatingRowColors(True)
 
-        self.date_edit.setDate(QDate.currentDate())
+        self.table.setRowCount(1)
 
-        # Time
+        self.table.setItem(
+            0,
+            0,
+            QTableWidgetItem("No transactions found.")
+        )
 
-        self.time_edit = QTimeEdit()
+        self.table.setSpan(0, 0, 1, 6)
 
-        self.time_edit.setTime(QTime.currentTime())
+        main_layout.addWidget(self.table)
 
-        # Save Button
+    # =========================================================
+    # Dialog
+    # =========================================================
 
-        self.save_button = QPushButton("Save Transaction")
+    def open_transaction_dialog(self):
+        dialog = TransactionDialog(self.session)
 
-        form_layout.addRow("Category", self.category_combo)
-        form_layout.addRow("Type", self.type_combo)
-        form_layout.addRow("Amount", self.amount_spin)
-        form_layout.addRow("Payment Method", self.payment_combo)
-        form_layout.addRow("Description", self.description_edit)
-        form_layout.addRow("Date", self.date_edit)
-        form_layout.addRow("Time", self.time_edit)
-        form_layout.addRow("", self.save_button)
-
-        main_layout.addWidget(form_card)
-
-        main_layout.addStretch()
+        dialog.exec()

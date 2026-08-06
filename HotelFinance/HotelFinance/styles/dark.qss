@@ -231,3 +231,22 @@ QLineEdit {
     padding-left: 8px;
 
 }
+
+
+/* Dialog */
+
+QDialog {
+
+    background: #121212;
+
+}
+
+#dialogTitle {
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    color:white;
+
+}

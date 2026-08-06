@@ -1,6 +1,6 @@
 #This file defines our first database table.
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy import (Date, DateTime, ForeignKey, Integer, Numeric, String, Text, Time,)
@@ -46,7 +46,7 @@ class Transaction(Base):
 
     transaction_time: Mapped[datetime] = mapped_column(
         Time,
-        default=datetime.now,
+        default=datetime.now().time(),
         nullable=False,
     )
 

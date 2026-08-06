@@ -20,8 +20,10 @@ from app.views.pages.settings_page import SettingsPage
 class MainWindow(QMainWindow):
     """Main application window."""
 
-    def __init__(self):
+    def __init__(self,session):
         super().__init__()
+
+        self.session = session
 
         self.setWindowTitle("Hotel Expense Tracker")
         self.resize(1600, 900)
@@ -61,7 +63,7 @@ class MainWindow(QMainWindow):
         main_layout.setStretch(1, 1)
 
         self.dashboard_page = DashboardPage()
-        self.transaction_page = TransactionPage()
+        self.transaction_page = TransactionPage(self.session)
         self.cash_page = CashPage()
         self.reports_page = ReportsPage()
         self.settings_page = SettingsPage()

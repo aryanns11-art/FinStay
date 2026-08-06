@@ -1,13 +1,16 @@
+from datetime import datetime
+
 from PySide6.QtWidgets import (
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
 )
 
 from app.views.widgets.stat_card import StatCard
-
 from app.views.widgets.transaction_table import TransactionTable
+
 
 class DashboardPage(QWidget):
     """Dashboard page."""
@@ -19,19 +22,32 @@ class DashboardPage(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(20)
 
-        # Dashboard Title
-        title = QLabel("Dashboard                                                           Thursday, 06 Aug 2026")
-        title.setStyleSheet("""
-            font-size:26px;
-            font-weight:bold;
-            margin-bottom:10px;
-        """)
-        main_layout.addWidget(title)
+        # =====================================================
+        # Header
+        # =====================================================
 
-        # =======================
+        header_layout = QHBoxLayout()
+
+        title = QLabel("Dashboard")
+        title.setObjectName("pageTitle")
+
+        date_label = QLabel(
+            datetime.now().strftime("%A, %d %b %Y")
+        )
+        date_label.setObjectName("dateLabel")
+
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header_layout.addWidget(date_label)
+
+        main_layout.addLayout(header_layout)
+
+        # =====================================================
         # Statistics Cards
-        # =======================
+        # =====================================================
 
         stats_layout = QGridLayout()
         stats_layout.setSpacing(15)
@@ -63,17 +79,12 @@ class DashboardPage(QWidget):
 
         main_layout.addLayout(stats_layout)
 
-        # =======================
+        # =====================================================
         # Recent Transactions
-        # =======================
+        # =====================================================
 
         section_title = QLabel("Recent Transactions")
-        section_title.setStyleSheet("""
-            font-size:18px;
-            font-weight:bold;
-            margin-top:20px;
-            margin-bottom:8px;
-        """)
+        section_title.setObjectName("sectionTitle")
 
         main_layout.addWidget(section_title)
 
