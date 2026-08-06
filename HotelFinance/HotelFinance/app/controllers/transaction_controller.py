@@ -28,3 +28,18 @@ class TransactionController:
 
     def get_transactions_by_type(self, transaction_type):
         return self.service.get_transactions_by_type(transaction_type)
+
+    def get_cash_income(self, today):
+        return self.service.get_cash_income(today)
+
+
+    def get_cash_expense(self, today):
+        return self.service.get_cash_expense(today)
+
+
+    def get_online_income(self, today):
+        return self.service.get_online_income(today)
+
+
+    def get_online_expense(self, today):
+        return self.service.get_online_expense(today)

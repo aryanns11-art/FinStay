@@ -61,16 +61,12 @@ def seed_database(session: Session):
 
         methods = [
 
-            PaymentMethod(name="Cash"),
+            PaymentMethod(name="Cash", is_active=True,),
 
-            PaymentMethod(name="UPI"),
-
-            PaymentMethod(name="Card"),
-
-            PaymentMethod(name="Bank Transfer"),
-
+            PaymentMethod( name="Online", is_active=True,),
         ]
 
         session.add_all(methods)
+
 
     session.commit()

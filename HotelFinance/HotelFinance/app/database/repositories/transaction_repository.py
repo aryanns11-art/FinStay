@@ -114,3 +114,63 @@ class TransactionRepository(BaseRepository):
             )
             .all()
         )
+
+    def get_cash_income_total(self, transaction_date: date):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Income",
+                PaymentMethod.name == "Cash",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_cash_expense_total(self, transaction_date: date):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Expense",
+                PaymentMethod.name == "Cash",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_online_income_total(self, transaction_date: date):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Income",
+                PaymentMethod.name == "Online",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_online_expense_total(self, transaction_date: date):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == transaction_date,
+                Category.type == "Expense",
+                PaymentMethod.name == "Online",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")

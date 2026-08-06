@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from PySide6.QtCore import Qt
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -23,9 +24,11 @@ from app.models.transaction import Transaction
 class TransactionPage(QWidget):
     """Transactions page."""
 
+    dashboard_updated = Signal()
+
     def __init__(self,session):
         super().__init__()
-
+        
         self.session = session
         self.transaction_controller = TransactionController(session)
 
@@ -165,6 +168,7 @@ class TransactionPage(QWidget):
 
         if dialog.exec():
             self.load_transactions()
+            self.dashboard_updated.emit()
 
     def load_transactions(self):
         """Load all transactions into the table."""
@@ -230,6 +234,7 @@ class TransactionPage(QWidget):
                 )
 
                 self.load_transactions()
+                self.dashboard_updated.emit()
 
     def populate_table(self, transactions):
 

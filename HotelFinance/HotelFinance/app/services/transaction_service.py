@@ -33,3 +33,18 @@ class TransactionService:
 
     def get_transactions_by_type(self, transaction_type):
         return self.repository.get_by_type(transaction_type)
+
+    def get_cash_income(self, today):
+        return self.repository.get_cash_income_total(today)
+
+
+    def get_cash_expense(self, today):
+        return self.repository.get_cash_expense_total(today)
+
+
+    def get_online_income(self, today):
+        return self.repository.get_online_income_total(today)
+
+
+    def get_online_expense(self, today):
+        return self.repository.get_online_expense_total(today)
