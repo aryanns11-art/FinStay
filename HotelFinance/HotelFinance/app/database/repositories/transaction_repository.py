@@ -2,6 +2,8 @@ from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+
 
 from app.database.repositories.base_repository import BaseRepository
 from app.models.transaction import Transaction
@@ -12,8 +14,14 @@ class TransactionRepository(BaseRepository):
     """Repository for transaction-related database operations."""
 
     def get_all(self):
+
+        self.session.expire_all()
         return (
             self.session.query(Transaction)
+            .options(
+                joinedload(Transaction.category),
+                joinedload(Transaction.payment_method),
+            )
             .order_by(
                 Transaction.transaction_date.desc(),
                 Transaction.transaction_time.desc(),

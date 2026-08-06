@@ -1,22 +1,13 @@
 from PySide6.QtCore import QDate, QTime
 
-from PySide6.QtWidgets import (
-    QComboBox,
-    QDateEdit,
-    QTimeEdit,
-    QDialogButtonBox,
-    QDoubleSpinBox,
-    QFormLayout,
-    QLineEdit,
-)
+from PySide6.QtWidgets import ( QComboBox, QDateEdit, QTimeEdit, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit,)
 from app.views.dialogs.base_dialog import BaseDialog
 from app.controllers.category_controller import CategoryController
 
-from app.controllers.category_controller import CategoryController
-from app.controllers.payment_method_controller import (
-    PaymentMethodController,
-)
+from app.controllers.payment_method_controller import (PaymentMethodController,)
 
+from app.controllers.transaction_controller import TransactionController
+from app.models.transaction import Transaction
 
 class TransactionDialog(BaseDialog):
     """Dialog for adding a transaction."""
@@ -29,6 +20,8 @@ class TransactionDialog(BaseDialog):
         self.category_controller = CategoryController(session)
 
         self.payment_method_controller = PaymentMethodController(session)
+
+        self.transaction_controller = TransactionController(session)
 
         self.build_ui()
 
@@ -62,15 +55,25 @@ class TransactionDialog(BaseDialog):
                 method.id,
             )
 
-    def test_data(self):
-        print("Category ID:", self.category_combo.currentData())
-        print("Payment Method ID:", self.payment_method_combo.currentData())
-        print("Amount:", self.amount_spin.value())
-        print("Description:", self.description_edit.text())
-        print("Date:", self.date_edit.date().toPython())
-        print("Time:", self.time_edit.time().toPython())
-
-        self.accept()
+    def save_transaction(self):
+        """Save a transaction to the database."""
+    
+        transaction = Transaction(
+            category_id=self.category_combo.currentData(),
+            payment_method_id=self.payment_method_combo.currentData(),
+            amount=self.amount_spin.value(),
+            description=self.description_edit.text().strip() or None,
+            transaction_date=self.date_edit.date().toPython(),
+            transaction_time=self.time_edit.time().toPython(),
+        )
+    
+        try:
+            self.transaction_controller.add_transaction(transaction)
+    
+            self.accept()
+    
+        except Exception as e:
+            print(e)
 
     def build_ui(self):
 
@@ -117,7 +120,7 @@ class TransactionDialog(BaseDialog):
             QDialogButtonBox.Save | QDialogButtonBox.Cancel
         )
 
-        self.button_box.accepted.connect(self.test_data)
+        self.button_box.accepted.connect(self.save_transaction)
         self.button_box.rejected.connect(self.reject)
 
         self.layout.addWidget(self.button_box)

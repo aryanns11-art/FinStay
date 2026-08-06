@@ -1,4 +1,3 @@
-from app.models.transaction import Transaction
 from app.services.transaction_service import TransactionService
 
 
@@ -8,24 +7,8 @@ class TransactionController:
     def __init__(self, session):
         self.service = TransactionService(session)
 
-    def add_transaction(
-        self,
-        category_id,
-        amount,
-        description,
-        payment_method,
-        transaction_date,
-        transaction_time,
-    ):
-        transaction = Transaction(
-            category_id=category_id,
-            amount=amount,
-            description=description,
-            payment_method=payment_method,
-            transaction_date=transaction_date,
-            transaction_time=transaction_time,
-        )
-
+    def add_transaction(self, transaction):
+        """Save a transaction."""
         return self.service.add_transaction(transaction)
 
     def get_transactions(self):

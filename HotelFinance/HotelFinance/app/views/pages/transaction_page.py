@@ -15,7 +15,10 @@ from PySide6.QtWidgets import (
 )
 
 from app.views.dialogs.transaction_dialog import TransactionDialog
+from app.controllers.transaction_controller import TransactionController
 
+from PySide6.QtWidgets import QMessageBox
+from app.models.transaction import Transaction
 
 class TransactionPage(QWidget):
     """Transactions page."""
@@ -24,8 +27,10 @@ class TransactionPage(QWidget):
         super().__init__()
 
         self.session = session
+        self.transaction_controller = TransactionController(session)
 
         self.init_ui()
+        self.load_transactions()
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
@@ -78,6 +83,12 @@ class TransactionPage(QWidget):
             self.open_transaction_dialog
         )
 
+        self.delete_button = QPushButton("Delete")
+
+        self.delete_button.clicked.connect(
+            self.delete_transaction
+        )
+
         toolbar_layout.addWidget(self.search_edit)
 
         toolbar_layout.addWidget(self.filter_combo)
@@ -85,6 +96,8 @@ class TransactionPage(QWidget):
         toolbar_layout.addStretch()
 
         toolbar_layout.addWidget(self.add_button)
+
+        toolbar_layout.addWidget(self.delete_button)
 
         main_layout.addLayout(toolbar_layout)
 
@@ -142,4 +155,126 @@ class TransactionPage(QWidget):
     def open_transaction_dialog(self):
         dialog = TransactionDialog(self.session)
 
-        dialog.exec()
+        if dialog.exec():
+            self.load_transactions()
+
+    def load_transactions(self):
+        """Load all transactions into the table."""
+
+        transactions = self.transaction_controller.get_transactions()
+
+        self.table.clearContents()
+        self.table.clearSpans()
+
+        self.table.setRowCount(len(transactions))
+
+        for row, transaction in enumerate(transactions):
+
+            self.table.setRowHeight(row, 40)
+
+            date_item = QTableWidgetItem(
+                transaction.transaction_date.strftime("%d-%m-%Y")
+            )
+
+            date_item.setData(
+                Qt.UserRole,
+                transaction.id
+            )
+
+            self.table.setItem(
+                row,
+                0,
+                date_item
+            )
+
+            self.table.setItem(
+                row,
+                1,
+                QTableWidgetItem(
+                    transaction.transaction_time.strftime("%H:%M")
+                ),
+            )
+
+            self.table.setItem(
+                row,
+                2,
+                QTableWidgetItem(
+                    transaction.category.name
+                ),
+            )
+
+            self.table.setItem(
+                row,
+                3,
+                QTableWidgetItem(
+                    f"₹ {transaction.amount:.2f}"
+                ),
+            )
+
+            self.table.setItem(
+                row,
+                4,
+                QTableWidgetItem(
+                    transaction.payment_method.name
+                ),
+            )
+
+            self.table.setItem(
+                row,
+                5,
+                QTableWidgetItem(
+                    transaction.description or ""
+                ),
+            )
+
+        if not transactions:
+            self.table.setRowCount(1)
+            self.table.setItem(
+                0,
+                0,
+                QTableWidgetItem("No transactions found.")
+            )
+            self.table.setSpan(0, 0, 1, 6)
+
+    def delete_transaction(self):
+
+        row = self.table.currentRow()
+
+        if row < 0:
+            QMessageBox.warning(
+                self,
+                "No Selection",
+                "Please select a transaction first."
+            )
+            return
+
+
+        transaction_id = self.table.item(
+            row,
+            0
+        ).data(Qt.UserRole)
+
+
+        transaction = (
+            self.session.query(Transaction)
+            .filter(Transaction.id == transaction_id)
+            .first()
+        )
+
+
+        if transaction:
+
+            confirm = QMessageBox.question(
+                self,
+                "Confirm Delete",
+                "Delete this transaction?"
+            )
+
+
+            if confirm == QMessageBox.Yes:
+
+                self.transaction_controller.delete_transaction(
+                    transaction
+                )
+
+                self.load_transactions()
