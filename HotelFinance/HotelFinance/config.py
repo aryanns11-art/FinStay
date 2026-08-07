@@ -18,3 +18,5 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 # Application
 APP_NAME = os.getenv("APP_NAME", "Hotel Finance Manager")
 APP_THEME = os.getenv("APP_THEME", "dark")
+
+POSTGRES_BIN = r"C:\Program Files\PostgreSQL\17\bin"

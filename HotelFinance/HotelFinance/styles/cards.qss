@@ -2,3 +2,9 @@ QFrame {
     background: #1F1F1F;
     border-radius: 12px;
 }
+
+QFrame#chartCard {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+}

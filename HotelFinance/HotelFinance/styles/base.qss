@@ -12,3 +12,31 @@ QMainWindow {
 QLabel {
     color: #F5F5F5;
 }
+
+QLabel#pageTitle {
+    font-size: 18pt;
+    font-weight: 600;
+}
+
+QLabel#dateLabel {
+    color: #9CA3AF;
+}
+
+QLabel#sectionTitle {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #E5E7EB;
+}
+
+QLabel#descriptionLabel {
+    color: #9CA3AF;
+}
+
+QLabel#statusBadge {
+    background-color: #14532D;
+    color: #DCFCE7;
+    border: 1px solid #22C55E;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-weight: 600;
+}

@@ -252,9 +252,6 @@ class CashPage(QWidget):
             self.table.setSpan(0, 0, 1, 6)
 
 
-
-
-
     def open_opening_balance_dialog(self):
 
         today = date.today()
