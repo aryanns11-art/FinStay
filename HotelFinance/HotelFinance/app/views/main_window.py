@@ -64,12 +64,15 @@ class MainWindow(QMainWindow):
 
         self.dashboard_page = DashboardPage(self.session)
         self.transaction_page = TransactionPage(self.session)
-        self.cash_page = CashPage()
+        self.cash_page = CashPage(self.session)
         self.reports_page = ReportsPage(self.session)
         self.settings_page = SettingsPage()
 
 
-        self.transaction_page.dashboard_updated.connect(self.dashboard_page.load_dashboard)
+        self.transaction_page.transactions_changed.connect(self.dashboard_page.load_dashboard   )
+        self.transaction_page.transactions_changed.connect(self.cash_page.load_page)    
+        self.transaction_page.transactions_changed.connect(self.reports_page.generate_report)   
+
 
         self.stack.addWidget(self.dashboard_page)
         self.stack.addWidget(self.transaction_page)
@@ -83,6 +86,10 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
 
         self.connect_signals()
+
+
+
+
 
     def connect_signals(self):
         self.sidebar.dashboard_btn.clicked.connect(

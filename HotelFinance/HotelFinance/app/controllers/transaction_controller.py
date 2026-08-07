@@ -75,3 +75,23 @@ class TransactionController:
     def get_expense_by_category(self,month,year):
         return self.service.get_expense_by_category(month,year)
 
+
+    def get_today_cash_income(self, today):
+        return self.service.get_today_cash_income(today)
+    
+    
+    def get_today_cash_expense(self, today):
+        return self.service.get_today_cash_expense(today)
+    
+    
+    def get_today_online_income(self, today):
+        return self.service.get_today_online_income(today)
+    
+    
+    def get_today_online_expense(self, today):
+        return self.service.get_today_online_expense(today)
+    
+    
+    def get_today_transactions(self, today):
+        return self.service.get_today_transactions(today)
+    

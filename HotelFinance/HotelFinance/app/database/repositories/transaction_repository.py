@@ -3,14 +3,15 @@ from decimal import Decimal
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+from sqlalchemy import cast, String, or_
+
 
 from app.database.repositories.base_repository import BaseRepository
 from app.models.transaction import Transaction
 from app.models.category import Category
-
-from sqlalchemy import cast, String, or_
-from sqlalchemy.orm import joinedload
 from app.models.payment_method import PaymentMethod
+
+
 
 class TransactionRepository(BaseRepository):
     """Repository for transaction-related database operations."""
@@ -319,6 +320,127 @@ class TransactionRepository(BaseRepository):
             .group_by(Category.name)
             .order_by(
                 func.sum(Transaction.amount).desc()
+            )
+            .all()
+        )
+
+
+    def get_today_cash_income(self, today):
+        result = (
+            self.session.query(
+                func.sum(Transaction.amount)
+            )
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == today,
+                Category.type == "Income",
+                Transaction.payment_method.has(
+                    name="Cash"
+                ),
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_today_cash_expense(self, today):
+        result = (
+            self.session.query(
+                func.sum(Transaction.amount)
+            )
+            .join(Category)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == today,
+                Category.type == "Expense",
+                Transaction.payment_method.has(
+                    name="Cash"
+                ),
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+
+    def get_today_cash_transactions(self,today):
+        return (
+            self.session.query(Transaction)
+            .join(Transaction.payment_method)
+            .filter(
+                Transaction.transaction_date == today,
+                Transaction.payment_method.has(
+                    name="Cash"
+                ),
+            )
+            .order_by(
+                Transaction.transaction_time.desc()
+            )
+            .all()
+        )
+
+    def _get_total(self, today, payment_name, category_type):
+
+        total = (
+            self.session.query(
+                func.coalesce(
+                    func.sum(Transaction.amount),
+                    0,
+                )
+            )
+            .join(Category)
+            .join(PaymentMethod)
+            .filter(
+                Transaction.transaction_date == today,
+                Category.type == category_type,
+                PaymentMethod.name == payment_name,
+            )
+            .scalar()
+        )
+
+        return total
+
+    def get_today_cash_income(self, today):
+        return self._get_total(
+            today,
+            "Cash",
+            "Income",
+        )
+
+
+    def get_today_cash_expense(self, today):
+        return self._get_total(
+            today,
+            "Cash",
+            "Expense",
+        )
+
+
+    def get_today_online_income(self, today):
+        return self._get_total(
+            today,
+            "Online",
+            "Income",
+        )
+
+
+    def get_today_online_expense(self, today):
+        return self._get_total(
+            today,
+            "Online",
+            "Expense",
+        )
+    
+    def get_today_transactions(self, today):
+
+        return (
+            self.session.query(Transaction)
+            .filter(
+                Transaction.transaction_date == today
+            )
+            .order_by(
+                Transaction.transaction_time.desc()
             )
             .all()
         )

@@ -231,23 +231,13 @@ class ReportsPage(QWidget):
             str(transactions)
         )
 
-        income_categories = (
-            self.transaction_controller.get_income_by_category(
-                month,
-                year,
-            )
-        )
+        income_categories = (self.transaction_controller.get_income_by_category(month,year))
 
-        expense_categories = (
-            self.transaction_controller.get_expense_by_category(
-                month,
-                year,
-            )
-        )
+        expense_categories = (self.transaction_controller.get_expense_by_category(month,year))
 
-        self.show_category_chart(self.income_breakdown_chart,income_categories,"Income Breakdown",)
+        self.show_category_chart(self.income_breakdown_chart,income_categories,"Income Breakdown")
 
-        self.show_category_chart(self.expense_breakdown_chart,expense_categories,"Expense Breakdown",)
+        self.show_category_chart(self.expense_breakdown_chart,expense_categories,"Expense Breakdown")
 
     def show_category_chart(self,chart_frame,data,chart_title,):
         """Display category-wise vertical bar chart."""

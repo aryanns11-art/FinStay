@@ -24,7 +24,7 @@ from app.models.transaction import Transaction
 class TransactionPage(QWidget):
     """Transactions page."""
 
-    dashboard_updated = Signal()
+    transactions_changed = Signal()
 
     def __init__(self,session):
         super().__init__()
@@ -168,7 +168,7 @@ class TransactionPage(QWidget):
 
         if dialog.exec():
             self.load_transactions()
-            self.dashboard_updated.emit()
+            self.transactions_changed.emit()
 
     def load_transactions(self):
         """Load all transactions into the table."""
@@ -234,7 +234,7 @@ class TransactionPage(QWidget):
                 )
 
                 self.load_transactions()
-                self.dashboard_updated.emit()
+                self.transactions_changed.emit()
 
     def populate_table(self, transactions):
 
@@ -247,60 +247,15 @@ class TransactionPage(QWidget):
 
             self.table.setRowHeight(row, 40)
 
-            date_item = QTableWidgetItem(
-                transaction.transaction_date.strftime("%d-%m-%Y")
-            )
+            date_item = QTableWidgetItem(transaction.transaction_date.strftime("%d-%m-%Y"))
+            date_item.setData(Qt.UserRole,transaction.id)
 
-            date_item.setData(
-                Qt.UserRole,
-                transaction.id
-            )
-
-            self.table.setItem(
-                row,
-                0,
-                date_item
-            )
-
-            self.table.setItem(
-                row,
-                1,
-                QTableWidgetItem(
-                    transaction.transaction_time.strftime("%H:%M")
-                ),
-            )
-
-            self.table.setItem(
-                row,
-                2,
-                QTableWidgetItem(
-                    transaction.category.name
-                ),
-            )
-
-            self.table.setItem(
-                row,
-                3,
-                QTableWidgetItem(
-                    f"₹ {transaction.amount:.2f}"
-                ),
-            )
-
-            self.table.setItem(
-                row,
-                4,
-                QTableWidgetItem(
-                    transaction.payment_method.name
-                ),
-            )
-
-            self.table.setItem(
-                row,
-                5,
-                QTableWidgetItem(
-                    transaction.description or ""
-                ),
-            )
+            self.table.setItem(row,0,date_item)
+            self.table.setItem(row,1,QTableWidgetItem(transaction.transaction_time.strftime("%H:%M")))
+            self.table.setItem(row,2,QTableWidgetItem(transaction.category.name))
+            self.table.setItem(row,3,QTableWidgetItem(f"₹ {transaction.amount:.2f}"))
+            self.table.setItem(row,4,QTableWidgetItem(transaction.payment_method.name))
+            self.table.setItem(row,5,QTableWidgetItem(transaction.description or ""))
 
         if not transactions:
             self.table.setRowCount(1)

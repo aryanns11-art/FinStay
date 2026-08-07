@@ -10,6 +10,7 @@ from app.models.transaction import Transaction
 from app.models.cash_note import CashNote
 from app.models.daily_summary import DailySummary
 from app.models.settings import Settings
+from app.models.daily_balance import DailyBalance
 
 
 def create_tables():
