@@ -18,15 +18,11 @@ class TransactionDialog(BaseDialog):
         self.session = session
 
         self.category_controller = CategoryController(session)
-
         self.payment_method_controller = PaymentMethodController(session)
-
         self.transaction_controller = TransactionController(session)
 
         self.build_ui()
-
         self.load_categories()
-
         self.load_payment_methods()
 
     def load_categories(self):
@@ -37,10 +33,7 @@ class TransactionDialog(BaseDialog):
         categories = self.category_controller.get_categories()
 
         for category in categories:
-            self.category_combo.addItem(
-                category.name,
-                category.id,
-            )
+            self.category_combo.addItem(category.name,category.id,)
 
     def load_payment_methods(self):
         """Load payment methods into the combo box."""
@@ -50,10 +43,7 @@ class TransactionDialog(BaseDialog):
         methods = self.payment_method_controller.get_payment_methods()
 
         for method in methods:
-            self.payment_method_combo.addItem(
-                method.name,
-                method.id,
-            )
+            self.payment_method_combo.addItem(method.name,method.id,)
 
     def save_transaction(self):
         """Save a transaction to the database."""
@@ -69,7 +59,6 @@ class TransactionDialog(BaseDialog):
     
         try:
             self.transaction_controller.add_transaction(transaction)
-    
             self.accept()
     
         except Exception as e:
@@ -80,30 +69,22 @@ class TransactionDialog(BaseDialog):
         form = QFormLayout()
         form.setSpacing(15)
 
-        # Category
         self.category_combo = QComboBox()
 
-        # Payment Method
         self.payment_method_combo = QComboBox()
 
-        # Amount
         self.amount_spin = QDoubleSpinBox()
         self.amount_spin.setPrefix("₹ ")
         self.amount_spin.setDecimals(2)
         self.amount_spin.setMaximum(999999999)
 
-        # Description
         self.description_edit = QLineEdit()
-        self.description_edit.setPlaceholderText(
-            "Optional description..."
-        )
+        self.description_edit.setPlaceholderText("Optional description...")
 
-        # Date
         self.date_edit = QDateEdit()
         self.date_edit.setCalendarPopup(True)
         self.date_edit.setDate(QDate.currentDate())
 
-        # Time
         self.time_edit = QTimeEdit()
         self.time_edit.setTime(QTime.currentTime())
 

@@ -5,8 +5,6 @@ from PySide6.QtWidgets import (QComboBox,QFrame,QGridLayout,QHBoxLayout,QLabel,Q
 from PySide6.QtCharts import ( QBarCategoryAxis, QBarSeries, QBarSet, QChart, QChartView, QValueAxis)
 from PySide6.QtGui import (QPainter,QColor)
 
-from PySide6.QtCharts import QChart
-
 from app.views.widgets.stat_card import StatCard
 from app.controllers.transaction_controller import (TransactionController)
 
@@ -27,7 +25,6 @@ class ReportsPage(QWidget):
         main_layout = QVBoxLayout(self)
 
         main_layout.setContentsMargins(20,20,20,20)
-
         main_layout.setSpacing(20)
 
         # =====================================================
@@ -39,14 +36,12 @@ class ReportsPage(QWidget):
         title = QLabel("Reports")
         title.setObjectName("pageTitle")
 
-
         date_label = QLabel(datetime.now().strftime("%A, %d %b %Y"))
 
         date_label.setObjectName("dateLabel")
 
 
         header_layout.addWidget(title)
-
         header_layout.addStretch()
 
         header_layout.addWidget(date_label)
@@ -187,56 +182,30 @@ class ReportsPage(QWidget):
 
     def generate_report(self):
 
-        month = (
-            self.month_combo.currentIndex() + 1
-        )
+        month = (self.month_combo.currentIndex() + 1)
 
-        year = int(
-            self.year_combo.currentText()
-        )
+        year = int(self.year_combo.currentText())
 
-        income = (
-            self.transaction_controller
-            .get_monthly_income(month, year)
-        )
+        income = (self.transaction_controller.get_monthly_income(month, year))
 
-        expense = (
-            self.transaction_controller
-            .get_monthly_expense(month, year)
-        )
+        expense = (self.transaction_controller.get_monthly_expense(month, year))
 
-        transactions = (
-            self.transaction_controller
-            .get_monthly_transaction_count(
-                month,
-                year,
-            )
-        )
+        transactions = (self.transaction_controller.get_monthly_transaction_count(month,year,))
 
         profit = income - expense
 
-        self.income_card.set_value(
-            f"₹ {income:.2f}"
-        )
+        self.income_card.set_value(f"₹ {income:.2f}")
 
-        self.expense_card.set_value(
-            f"₹ {expense:.2f}"
-        )
+        self.expense_card.set_value(f"₹ {expense:.2f}")
 
-        self.profit_card.set_value(
-            f"₹ {profit:.2f}"
-        )
+        self.profit_card.set_value(f"₹ {profit:.2f}")
 
-        self.transaction_card.set_value(
-            str(transactions)
-        )
+        self.transaction_card.set_value(str(transactions))
 
         income_categories = (self.transaction_controller.get_income_by_category(month,year))
-
         expense_categories = (self.transaction_controller.get_expense_by_category(month,year))
 
         self.show_category_chart(self.income_breakdown_chart,income_categories,"Income Breakdown")
-
         self.show_category_chart(self.expense_breakdown_chart,expense_categories,"Expense Breakdown")
 
     def show_category_chart(self,chart_frame,data,chart_title,):

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QWidget,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QMessageBox,
     QFileDialog,
+    QProgressDialog
 )
 
 from app.controllers.backup_controller import BackupController
@@ -173,48 +174,25 @@ class SettingsPage(QWidget):
     def backup_database(self):
 
         try:
-
-            backup_file = (
-                self.backup_controller.backup_database()
-            )
-
-            QMessageBox.information(
-                self,
-                "Backup Complete",
-                f"Database backed up successfully.\n\n{backup_file.name}",
-            )
-
+            backup_file = (self.backup_controller.backup_database())
+            QMessageBox.information(self,"Backup Complete",f"Database backed up successfully.\n\n{backup_file.name}",)
             self.load_backup_info()
 
         except Exception as error:
+            QMessageBox.critical(self,"Backup Failed",str(error),)
 
-            QMessageBox.critical(
-                self,
-                "Backup Failed",
-                str(error),
-            )
 
     def load_backup_info(self):
 
-        backup = (
-            self.backup_controller.get_last_backup()
-        )
+        backup = (self.backup_controller.get_last_backup())
 
         if backup:
-
-            last_modified = datetime.fromtimestamp(
-                backup.stat().st_mtime
-            )
-
-            self.last_backup_label.setText(
-                last_modified.strftime(
-                    "%d %b %Y %I:%M %p"
-                )
-            )
+            last_modified = datetime.fromtimestamp(backup.stat().st_mtime)
+            self.last_backup_label.setText(last_modified.strftime("%d %b %Y %I:%M %p"))
 
         else:
-
             self.last_backup_label.setText("Never")
+
 
     def restore_database(self):
 
@@ -247,26 +225,49 @@ class SettingsPage(QWidget):
         if confirm != QMessageBox.Yes:
             return
 
+        # =====================================================
+        # Close existing database connections
+        # =====================================================
+
         engine.dispose()
+
+        # =====================================================
+        # Disable buttons
+        # =====================================================
 
         self.restore_button.setEnabled(False)
         self.backup_button.setEnabled(False)
 
-        self.restore_worker = RestoreWorker(
-            backup_file
-        )
+        # =====================================================
+        # Restore Progress
+        # =====================================================
 
-        self.restore_worker.finished.connect(
-            self.restore_finished
-        )
+        self.restore_progress = QProgressDialog("Restoring database...\nPlease wait.",None,0,0,self,)
 
-        self.restore_worker.error.connect(
-            self.restore_failed
-        )
+        self.restore_progress.setWindowTitle("Restoring Database")
 
+        self.restore_progress.setWindowModality(Qt.ApplicationModal)
+
+        self.restore_progress.setCancelButton(None)
+
+        self.restore_progress.setMinimumWidth(350)
+
+        self.restore_progress.show()
+
+        # =====================================================
+        # Restore Worker
+        # =====================================================
+
+        self.restore_worker = RestoreWorker(backup_file)
+        self.restore_worker.restore_finished.connect(self.restore_finished)
+        self.restore_worker.restore_error.connect(self.restore_failed)
         self.restore_worker.start()
 
+
     def restore_finished(self):
+
+        if hasattr(self, "restore_progress"):
+            self.restore_progress.close()
 
         self.restore_button.setEnabled(True)
         self.backup_button.setEnabled(True)
@@ -281,21 +282,27 @@ class SettingsPage(QWidget):
             ),
         )
 
+
     def restore_failed(self, error):
+
+        if hasattr(self, "restore_progress"):
+            self.restore_progress.close()
 
         self.restore_button.setEnabled(True)
         self.backup_button.setEnabled(True)
 
-        QMessageBox.critical(
-            self,
-            "Restore Failed",
-            error,
-        )
+        QMessageBox.critical(self,"Restore Failed",error)
+
 
     def close_restore_worker(self):
 
         if hasattr(self, "restore_worker"):
 
             if self.restore_worker.isRunning():
-
                 self.restore_worker.stop()
+
+
+    def closeEvent(self, event):
+
+        self.close_restore_worker()
+        event.accept()

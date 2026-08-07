@@ -1,10 +1,4 @@
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QMainWindow,
-    QStackedWidget,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import (QHBoxLayout,QMainWindow,QStackedWidget,QVBoxLayout,QWidget)
 
 from app.views.widgets.sidebar import Sidebar
 from app.views.widgets.topbar import TopBar
@@ -89,28 +83,16 @@ class MainWindow(QMainWindow):
 
 
 
-
-
     def connect_signals(self):
-        self.sidebar.dashboard_btn.clicked.connect(
-            lambda: self.change_page(0)
-        )
+        self.sidebar.dashboard_btn.clicked.connect(lambda: self.change_page(0))
 
-        self.sidebar.transactions_btn.clicked.connect(
-            lambda: self.change_page(1)
-        )
+        self.sidebar.transactions_btn.clicked.connect(lambda: self.change_page(1))
 
-        self.sidebar.cash_btn.clicked.connect(
-            lambda: self.change_page(2)
-        )
+        self.sidebar.cash_btn.clicked.connect(lambda: self.change_page(2))
 
-        self.sidebar.reports_btn.clicked.connect(
-            lambda: self.change_page(3)
-        )
+        self.sidebar.reports_btn.clicked.connect(lambda: self.change_page(3))
 
-        self.sidebar.settings_btn.clicked.connect(
-            lambda: self.change_page(4)
-        )
+        self.sidebar.settings_btn.clicked.connect(lambda: self.change_page(4))
 
     def change_page(self, index: int):
         self.stack.setCurrentIndex(index)

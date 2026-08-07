@@ -14,61 +14,15 @@ class DashboardPage(QWidget):
         super().__init__()
 
         self.session = session
-
         self.transaction_controller = TransactionController(session)
 
         self.init_ui()
-
         self.load_dashboard()
 
     def init_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(24, 24, 24, 24)
         main_layout.setSpacing(24)
-
-        self.setStyleSheet(
-            """
-            QLabel#pageTitle {
-                font-size: 24px;
-                font-weight: 600;
-                color: #F5F5F5;
-            }
-
-            QLabel#dateLabel {
-                font-size: 11px;
-                color: #9CA3AF;
-            }
-
-            QLabel#sectionTitle {
-                font-size: 14px;
-                font-weight: 600;
-                color: #E5E7EB;
-                margin-bottom: 2px;
-            }
-
-            QFrame#summaryCard {
-                background-color: #1B1B1B;
-                border: 1px solid #2A2A2A;
-                border-radius: 16px;
-            }
-
-            QLabel#summaryCaption {
-                font-size: 11px;
-                color: #6B7280;
-            }
-
-            QLabel#summaryLabel {
-                font-size: 12px;
-                color: #A1A1AA;
-            }
-
-            QLabel#summaryValue {
-                font-size: 15px;
-                font-weight: 600;
-                color: #F5F5F5;
-            }
-            """
-        )
 
         # =====================================================
         # Header
@@ -217,7 +171,6 @@ class DashboardPage(QWidget):
         today = date.today()
 
         income = self.transaction_controller.get_today_income(today)
-
         expense = self.transaction_controller.get_today_expense(today)
 
         profit = income - expense
@@ -225,46 +178,33 @@ class DashboardPage(QWidget):
         cash_income = self.transaction_controller.get_cash_income(today)
 
         cash_expense = self.transaction_controller.get_cash_expense(today)
-
         online_income = (self.transaction_controller.get_online_income(today))
 
         online_expense = (self.transaction_controller.get_online_expense(today))
-
         income_count = (self.transaction_controller.get_income_transaction_count(today))
 
         expense_count = (self.transaction_controller.get_expense_transaction_count(today))
-
         highest_income = (self.transaction_controller.get_highest_income_transaction(today))
 
         highest_expense = (self.transaction_controller.get_highest_expense_transaction(today))
-
         self.income_count_label.setText(str(income_count))
 
         self.expense_count_label.setText(str(expense_count))
-
         self.income_card.set_value(f"₹ {income:.2f}")
 
         self.expense_card.set_value(f"₹ {expense:.2f}")
-
         self.profit_card.set_value(f"₹ {profit:.2f}")
 
         self.cash_income_card.set_value(f"₹ {cash_income:.2f}")
-
         self.cash_expense_card.set_value(f"₹ {cash_expense:.2f}")
 
         self.online_income_card.set_value(f"₹ {online_income:.2f}")
-
         self.online_expense_card.set_value(f"₹ {online_expense:.2f}")
 
         if highest_income:
 
-            self.highest_income_label.setText(
-                f"{highest_income.category.name} ({highest_income.payment_method.name})"
-            )
-
-            self.highest_income_amount.setText(
-                f"₹ {highest_income.amount:.2f}"
-            )
+            self.highest_income_label.setText(f"{highest_income.category.name} ({highest_income.payment_method.name})")
+            self.highest_income_amount.setText(f"₹ {highest_income.amount:.2f}")
 
         else:
 
@@ -273,13 +213,8 @@ class DashboardPage(QWidget):
 
         if highest_expense:
 
-            self.highest_expense_label.setText(
-                f"{highest_expense.category.name} ({highest_expense.payment_method.name})"
-            )
-
-            self.highest_expense_amount.setText(
-                f"₹ {highest_expense.amount:.2f}"
-            )
+            self.highest_expense_label.setText(f"{highest_expense.category.name} ({highest_expense.payment_method.name})")
+            self.highest_expense_amount.setText(f"₹ {highest_expense.amount:.2f}")
 
         else:
 

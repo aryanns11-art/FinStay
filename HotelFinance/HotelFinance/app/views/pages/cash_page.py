@@ -93,7 +93,6 @@ class CashPage(QWidget):
         online_layout = QGridLayout()
         online_layout.setSpacing(15)
 
-
         self.online_opening_card = StatCard("Opening","₹0")
         self.online_income_card = StatCard("Income","₹0")
         self.online_expense_card = StatCard("Expense","₹0")
@@ -151,14 +150,8 @@ class CashPage(QWidget):
     def load_transactions(self):
 
         today = date.today()
-
-        transactions = (
-            self.transaction_controller
-            .get_today_transactions(today)
-        )
-
+        transactions = (self.transaction_controller.get_today_transactions(today))
         self.populate_table(transactions)
-
 
 
     def load_daily_balance(self):
@@ -220,35 +213,34 @@ class CashPage(QWidget):
             - online_expense
         )
 
-
         self.cash_closing_card.set_value(f"₹ {cash_closing:.2f}")
         self.online_closing_card.set_value(f"₹ {online_closing:.2f}")
 
 
 
-
     def populate_table(self, transactions):
+
         self.table.clearContents()
         self.table.clearSpans()
         self.table.setRowCount(len(transactions))
+
         for row, transaction in enumerate(transactions):
+
             self.table.setRowHeight(row, 40)
             date_item = QTableWidgetItem(transaction.transaction_date.strftime("%d-%m-%Y"))
             date_item.setData(Qt.UserRole,transaction.id)
+
             self.table.setItem(row,0,date_item)
             self.table.setItem(row,1,QTableWidgetItem(transaction.transaction_time.strftime("%H:%M")))
             self.table.setItem(row,2,QTableWidgetItem(transaction.category.name))
             self.table.setItem(row,3,QTableWidgetItem(transaction.payment_method.name))
             self.table.setItem(row,4,QTableWidgetItem(f"₹ {transaction.amount:.2f}"))
             self.table.setItem(row,5,QTableWidgetItem(transaction.description or ""))
+
         if not transactions:
             self.table.setRowCount(1)
             self.table.clearSelection()
-            self.table.setItem(
-                0,
-                0,
-                QTableWidgetItem("No transactions found.")
-            )
+            self.table.setItem(0,0,QTableWidgetItem("No transactions found."))
             self.table.setSpan(0, 0, 1, 6)
 
 

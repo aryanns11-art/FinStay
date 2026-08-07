@@ -29,15 +29,9 @@ class OpeningBalanceDialog(BaseDialog):
         self.online_spin.setDecimals(2)
         self.online_spin.setMaximum(999999999)
 
-        form.addRow(
-            "Cash Opening",
-            self.cash_spin,
-        )
+        form.addRow("Cash Opening",self.cash_spin,)
 
-        form.addRow(
-            "Online Opening",
-            self.online_spin,
-        )
+        form.addRow("Online Opening",self.online_spin,)
 
         self.layout.addLayout(form)
 

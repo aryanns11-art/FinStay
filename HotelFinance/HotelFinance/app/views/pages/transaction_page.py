@@ -1,24 +1,10 @@
 from datetime import datetime
 
-from PySide6.QtCore import Qt
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QVBoxLayout,
-    QWidget,
-    QHeaderView,
-)
+from PySide6.QtCore import Signal , Qt
+from PySide6.QtWidgets import ( QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView, QMessageBox )
 
 from app.views.dialogs.transaction_dialog import TransactionDialog
 from app.controllers.transaction_controller import TransactionController
-
-from PySide6.QtWidgets import QMessageBox
 from app.models.transaction import Transaction
 
 class TransactionPage(QWidget):
@@ -49,9 +35,7 @@ class TransactionPage(QWidget):
         title = QLabel("Transactions")
         title.setObjectName("pageTitle")
 
-        date_label = QLabel(
-            datetime.now().strftime("%A, %d %b %Y")
-        )
+        date_label = QLabel(datetime.now().strftime("%A, %d %b %Y"))
         date_label.setObjectName("dateLabel")
 
         header_layout.addWidget(title)
@@ -68,13 +52,9 @@ class TransactionPage(QWidget):
 
         self.search_edit = QLineEdit()
 
-        self.search_edit.setPlaceholderText(
-            "Search transactions..."
-        )
+        self.search_edit.setPlaceholderText("Search transactions...")
 
-        self.search_edit.textChanged.connect(
-            self.search_transactions
-        )
+        self.search_edit.textChanged.connect(self.search_transactions)
 
         self.filter_combo = QComboBox()
         self.filter_combo.addItems(
@@ -84,30 +64,20 @@ class TransactionPage(QWidget):
                 "Expense",
             ]
         )
-        self.filter_combo.currentTextChanged.connect(
-            self.filter_transactions
-        )
+        self.filter_combo.currentTextChanged.connect(self.filter_transactions)
 
         self.add_button = QPushButton("+ Add Transaction")
-
-        self.add_button.clicked.connect(
-            self.open_transaction_dialog
-        )
+        self.add_button.clicked.connect(self.open_transaction_dialog)
 
         self.delete_button = QPushButton("Delete")
-
-        self.delete_button.clicked.connect(
-            self.delete_transaction
-        )
+        self.delete_button.clicked.connect(self.delete_transaction)
 
         toolbar_layout.addWidget(self.search_edit)
-
         toolbar_layout.addWidget(self.filter_combo)
 
         toolbar_layout.addStretch()
 
         toolbar_layout.addWidget(self.add_button)
-
         toolbar_layout.addWidget(self.delete_button)
 
         main_layout.addLayout(toolbar_layout)
@@ -131,29 +101,19 @@ class TransactionPage(QWidget):
             ]
         )
 
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.Stretch
-        )
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         self.table.verticalHeader().setVisible(False)
 
-        self.table.setSelectionBehavior(
-            QTableWidget.SelectRows
-        )
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
 
-        self.table.setEditTriggers(
-            QTableWidget.NoEditTriggers
-        )
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.table.setAlternatingRowColors(True)
 
         self.table.setRowCount(1)
 
-        self.table.setItem(
-            0,
-            0,
-            QTableWidgetItem("No transactions found.")
-        )
+        self.table.setItem(0,0,QTableWidgetItem("No transactions found."))
 
         self.table.setSpan(0, 0, 1, 6)
 
@@ -185,10 +145,7 @@ class TransactionPage(QWidget):
             self.load_transactions()
             return
 
-        transactions = (
-            self.transaction_controller.search_transactions(text)
-        )
-
+        transactions = (self.transaction_controller.search_transactions(text))
         self.populate_table(transactions)
 
         
@@ -197,41 +154,19 @@ class TransactionPage(QWidget):
         row = self.table.currentRow()
 
         if row < 0:
-            QMessageBox.warning(
-                self,
-                "No Selection",
-                "Please select a transaction first."
-            )
+            QMessageBox.warning(self,"No Selection","Please select a transaction first.")
             return
 
+        transaction_id = self.table.item(row,0).data(Qt.UserRole)
 
-        transaction_id = self.table.item(
-            row,
-            0
-        ).data(Qt.UserRole)
-
-
-        transaction = (
-            self.session.query(Transaction)
-            .filter(Transaction.id == transaction_id)
-            .first()
-        )
+        transaction = (self.session.query(Transaction).filter(Transaction.id == transaction_id).first())
 
 
         if transaction:
-
-            confirm = QMessageBox.question(
-                self,
-                "Confirm Delete",
-                "Delete this transaction?"
-            )
-
+            confirm = QMessageBox.question(self,"Confirm Delete","Delete this transaction?")
 
             if confirm == QMessageBox.Yes:
-
-                self.transaction_controller.delete_transaction(
-                    transaction
-                )
+                self.transaction_controller.delete_transaction(transaction)
 
                 self.load_transactions()
                 self.transactions_changed.emit()
@@ -260,11 +195,7 @@ class TransactionPage(QWidget):
         if not transactions:
             self.table.setRowCount(1)
             self.table.clearSelection()
-            self.table.setItem(
-                0,
-                0,
-                QTableWidgetItem("No transactions found.")
-            )
+            self.table.setItem( 0, 0, QTableWidgetItem("No transactions found."))
             self.table.setSpan(0, 0, 1, 6)
 
     def filter_transactions(self, transaction_type):
@@ -274,10 +205,5 @@ class TransactionPage(QWidget):
             self.load_transactions()
             return
     
-        transactions = (
-            self.transaction_controller.get_transactions_by_type(
-                transaction_type
-            )
-        )
-    
+        transactions = (self.transaction_controller.get_transactions_by_type(transaction_type))
         self.populate_table(transactions)
