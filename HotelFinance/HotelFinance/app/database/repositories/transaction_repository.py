@@ -228,3 +228,97 @@ class TransactionRepository(BaseRepository):
             .order_by(Transaction.amount.desc())
             .first()
         )
+
+
+    def get_monthly_income(self, month: int, year: int):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .filter(
+                func.extract("month", Transaction.transaction_date) == month,
+                func.extract("year", Transaction.transaction_date) == year,
+                Category.type == "Income",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_monthly_expense(self, month: int, year: int):
+        result = (
+            self.session.query(func.sum(Transaction.amount))
+            .join(Category)
+            .filter(
+                func.extract("month", Transaction.transaction_date) == month,
+                func.extract("year", Transaction.transaction_date) == year,
+                Category.type == "Expense",
+            )
+            .scalar()
+        )
+
+        return result or Decimal("0.00")
+
+    def get_monthly_transaction_count(self, month: int, year: int):
+        return (
+            self.session.query(Transaction)
+            .filter(
+                func.extract("month", Transaction.transaction_date) == month,
+                func.extract("year", Transaction.transaction_date) == year,
+            )
+            .count()
+        )
+
+    def get_income_by_category(self,month: int,year: int):
+        return (
+            self.session.query(
+                Category.name,
+                func.sum(Transaction.amount),
+            )
+            .join(Category)
+            .filter(
+                func.extract(
+                    "month",
+                    Transaction.transaction_date,
+                )
+                == month,
+                func.extract(
+                    "year",
+                    Transaction.transaction_date,
+                )
+                == year,
+                Category.type == "Income",
+            )
+            .group_by(Category.name)
+            .order_by(
+                func.sum(Transaction.amount).desc()
+            )
+            .all()
+        )
+
+
+    def get_expense_by_category(self,month: int,year: int):
+        return (
+            self.session.query(
+                Category.name,
+                func.sum(Transaction.amount),
+            )
+            .join(Category)
+            .filter(
+                func.extract(
+                    "month",
+                    Transaction.transaction_date,
+                )
+                == month,
+                func.extract(
+                    "year",
+                    Transaction.transaction_date,
+                )
+                == year,
+                Category.type == "Expense",
+            )
+            .group_by(Category.name)
+            .order_by(
+                func.sum(Transaction.amount).desc()
+            )
+            .all()
+        )

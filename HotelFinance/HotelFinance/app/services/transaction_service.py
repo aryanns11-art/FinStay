@@ -63,4 +63,20 @@ class TransactionService:
     def get_highest_expense_transaction(self, today):
         return self.repository.get_highest_expense_transaction(today)
 
+    def get_monthly_income(self, month, year):
+        return self.repository.get_monthly_income(month, year)
+
+
+    def get_monthly_expense(self, month, year):
+        return self.repository.get_monthly_expense(month, year)
+
+
+    def get_monthly_transaction_count(self, month, year):
+        return self.repository.get_monthly_transaction_count(month,year)
+
+    def get_income_by_category(self,month,year):
+        return self.repository.get_income_by_category(month,year)
+
+    def get_expense_by_category(self,month,year):
+        return self.repository.get_expense_by_category(month,year)
 

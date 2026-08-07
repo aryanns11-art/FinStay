@@ -1,17 +1,9 @@
 from datetime import datetime, date
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-    QFrame,
-)
+from PySide6.QtWidgets import (QGridLayout,QHBoxLayout,QLabel,QVBoxLayout,QWidget,QFrame,)
 
 from app.views.widgets.stat_card import StatCard
-
 from app.controllers.transaction_controller import (TransactionController,)
 
 
@@ -115,40 +107,19 @@ class DashboardPage(QWidget):
         stats_layout.setColumnStretch(2, 1)
         stats_layout.setColumnStretch(3, 1)
 
-        self.income_card = StatCard(
-            "Today's Income",
-            "₹0",
-        )
+        self.income_card = StatCard("Today's Income","₹0",)
 
-        self.expense_card = StatCard(
-            "Today's Expense",
-            "₹0",
-        )
+        self.expense_card = StatCard("Today's Expense","₹0",)
 
-        self.profit_card = StatCard(
-            "Today's Net Profit",
-            "₹0",
-        )
+        self.profit_card = StatCard("Today's Net Profit","₹0",)
 
-        self.cash_income_card = StatCard(
-            "Cash Income",
-            "₹0",
-        )
+        self.cash_income_card = StatCard("Cash Income","₹0",)
 
-        self.cash_expense_card = StatCard(
-            "Cash Expense",
-            "₹0",
-        )
+        self.cash_expense_card = StatCard("Cash Expense","₹0",)
 
-        self.online_income_card = StatCard(
-            "Online Income",
-            "₹0",
-        )
+        self.online_income_card = StatCard("Online Income","₹0",)
 
-        self.online_expense_card = StatCard(
-            "Online Expense",
-            "₹0",
-        )
+        self.online_expense_card = StatCard("Online Expense","₹0",)
 
         stats_layout.addWidget(self.profit_card, 0, 0)
         stats_layout.addWidget(self.income_card, 0, 1)
@@ -267,41 +238,23 @@ class DashboardPage(QWidget):
 
         highest_expense = (self.transaction_controller.get_highest_expense_transaction(today))
 
-        self.income_count_label.setText(
-            str(income_count)
-        )
+        self.income_count_label.setText(str(income_count))
 
-        self.expense_count_label.setText(
-            str(expense_count)
-        )
+        self.expense_count_label.setText(str(expense_count))
 
-        self.income_card.set_value(
-            f"₹ {income:.2f}"
-        )
+        self.income_card.set_value(f"₹ {income:.2f}")
 
-        self.expense_card.set_value(
-            f"₹ {expense:.2f}"
-        )
+        self.expense_card.set_value(f"₹ {expense:.2f}")
 
-        self.profit_card.set_value(
-            f"₹ {profit:.2f}"
-        )
+        self.profit_card.set_value(f"₹ {profit:.2f}")
 
-        self.cash_income_card.set_value(
-            f"₹ {cash_income:.2f}"
-        )
+        self.cash_income_card.set_value(f"₹ {cash_income:.2f}")
 
-        self.cash_expense_card.set_value(
-            f"₹ {cash_expense:.2f}"
-        )
+        self.cash_expense_card.set_value(f"₹ {cash_expense:.2f}")
 
-        self.online_income_card.set_value(
-            f"₹ {online_income:.2f}"
-        )
+        self.online_income_card.set_value(f"₹ {online_income:.2f}")
 
-        self.online_expense_card.set_value(
-            f"₹ {online_expense:.2f}"
-        )
+        self.online_expense_card.set_value(f"₹ {online_expense:.2f}")
 
         if highest_income:
 

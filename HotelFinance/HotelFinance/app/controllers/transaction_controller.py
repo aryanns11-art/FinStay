@@ -58,4 +58,20 @@ class TransactionController:
     def get_highest_expense_transaction(self, today):
         return self.service.get_highest_expense_transaction(today)
 
+    def get_monthly_income(self, month, year):
+        return self.service.get_monthly_income(month,year)
+
+
+    def get_monthly_expense(self, month, year):
+        return self.service.get_monthly_expense(month,year)
+
+    def get_monthly_transaction_count(self, month, year):
+        return self.service.get_monthly_transaction_count(month,year)
+
+
+    def get_income_by_category(self,month,year):
+        return self.service.get_income_by_category(month,year)
+
+    def get_expense_by_category(self,month,year):
+        return self.service.get_expense_by_category(month,year)
 

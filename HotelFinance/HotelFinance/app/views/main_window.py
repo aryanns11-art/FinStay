@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         self.dashboard_page = DashboardPage(self.session)
         self.transaction_page = TransactionPage(self.session)
         self.cash_page = CashPage()
-        self.reports_page = ReportsPage()
+        self.reports_page = ReportsPage(self.session)
         self.settings_page = SettingsPage()
 
 
