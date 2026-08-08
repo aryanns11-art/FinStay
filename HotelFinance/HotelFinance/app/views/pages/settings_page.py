@@ -1,10 +1,12 @@
 from datetime import datetime
+import re
 
-from PySide6.QtCore import QUrl, Qt
-from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QGridLayout, QMessageBox, QFileDialog, QProgressDialog)
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFrame, QGridLayout, QMessageBox, QFileDialog, QProgressDialog)
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.controllers.backup_controller import BackupController
+from app.controllers.settings_controller import SettingsController
 from app.workers.restore_worker import RestoreWorker
 from app.database.connection import engine
 from config import DB_NAME
@@ -17,10 +19,12 @@ class SettingsPage(QWidget):
 
         self.session = session
         self.backup_controller = BackupController()
+        self.settings_controller = SettingsController(session)
         self.restore_worker = None
         self.restore_progress = None
 
         self.init_ui()
+        self.load_hotel_information()
         self.load_backup_info()
 
     def init_ui(self):
@@ -42,6 +46,52 @@ class SettingsPage(QWidget):
         header_layout.addWidget(date_label)
 
         main_layout.addLayout(header_layout)
+
+        hotel_title = QLabel("Hotel Information")
+        hotel_title.setObjectName("sectionTitle")
+        main_layout.addWidget(hotel_title)
+
+        hotel_card = QFrame()
+        hotel_card.setObjectName("chartCard")
+        hotel_card.setFrameShape(QFrame.StyledPanel)
+        hotel_card.setLineWidth(1)
+
+        hotel_layout = QGridLayout(hotel_card)
+        hotel_layout.setContentsMargins(20, 20, 20, 20)
+        hotel_layout.setSpacing(12)
+
+        self.hotel_name_edit = QLineEdit()
+        self.hotel_name_edit.setPlaceholderText("Hotel Name")
+        self.hotel_address_edit = QLineEdit()
+        self.hotel_address_edit.setPlaceholderText("Hotel Address")
+        self.phone_number_edit = QLineEdit()
+        self.phone_number_edit.setPlaceholderText("Phone Number")
+        self.email_edit = QLineEdit()
+        self.email_edit.setPlaceholderText("Email Address")
+        self.gstin_edit = QLineEdit()
+        self.gstin_edit.setPlaceholderText("GSTIN (Optional)")
+
+        hotel_layout.addWidget(QLabel("Hotel Name *"), 0, 0)
+        hotel_layout.addWidget(self.hotel_name_edit, 0, 1, 1, 3)
+        hotel_layout.addWidget(QLabel("Hotel Address"), 1, 0)
+        hotel_layout.addWidget(self.hotel_address_edit, 1, 1, 1, 3)
+        hotel_layout.addWidget(QLabel("Phone Number"), 2, 0)
+        hotel_layout.addWidget(self.phone_number_edit, 2, 1)
+        hotel_layout.addWidget(QLabel("Email Address"), 2, 2)
+        hotel_layout.addWidget(self.email_edit, 2, 3)
+        hotel_layout.addWidget(QLabel("GSTIN"), 3, 0)
+        hotel_layout.addWidget(self.gstin_edit, 3, 1, 1, 3)
+
+        save_layout = QHBoxLayout()
+        save_layout.addStretch()
+        self.save_hotel_information_button = QPushButton("Save Changes")
+        self.save_hotel_information_button.clicked.connect(self.save_hotel_information)
+        save_layout.addWidget(self.save_hotel_information_button)
+        hotel_layout.addLayout(save_layout, 4, 0, 1, 4)
+
+        hotel_layout.setColumnStretch(1, 1)
+        hotel_layout.setColumnStretch(3, 1)
+        main_layout.addWidget(hotel_card)
 
         section_title = QLabel("Backup & Restore")
         section_title.setObjectName("sectionTitle")
@@ -104,67 +154,76 @@ class SettingsPage(QWidget):
         backup_card_layout.addLayout(buttons_layout)
 
         main_layout.addWidget(backup_card)
-
-        location_title = QLabel("Backup Location")
-        location_title.setObjectName("sectionTitle")
-        main_layout.addWidget(location_title)
-
-        location_card = QFrame()
-        location_card.setObjectName("chartCard")
-        location_card.setFrameShape(QFrame.StyledPanel)
-        location_card.setLineWidth(1)
-
-        location_card_layout = QVBoxLayout(location_card)
-        location_card_layout.setContentsMargins(20, 20, 20, 20)
-        location_card_layout.setSpacing(12)
-
-        location_description = QLabel(
-            "Backups are stored locally on this computer."
-        )
-        location_description.setWordWrap(True)
-        location_card_layout.addWidget(location_description)
-
-        backup_folder = self.backup_controller.repository.backup_directory
-        backup_folder_path = (
-            f"{backup_folder.as_posix()}/"
-            if str(backup_folder)
-            else "backups/"
-        )
-
-        self.backup_path_label = QLabel(backup_folder_path)
-        self.backup_path_label.setWordWrap(True)
-        location_card_layout.addWidget(self.backup_path_label)
-
-        open_folder_row = QHBoxLayout()
-        self.open_backup_folder_button = QPushButton("Open Backup Folder")
-        self.open_backup_folder_button.clicked.connect(self.open_backup_folder)
-        open_folder_row.addWidget(self.open_backup_folder_button)
-        open_folder_row.addStretch()
-        location_card_layout.addLayout(open_folder_row)
-
-        main_layout.addWidget(location_card)
         main_layout.addStretch(1)
 
-    def open_backup_folder(self):
+    def load_hotel_information(self):
+        """Populate hotel information fields from the settings record."""
 
         try:
-            backup_folder = self.backup_controller.repository.backup_directory
-            backup_folder.mkdir(parents=True, exist_ok=True)
-            folder_path = backup_folder.resolve()
-        except OSError:
+            settings = self.settings_controller.get_settings()
+        except SQLAlchemyError:
             QMessageBox.critical(
                 self,
-                "Unable to Open Folder",
-                "The backup folder could not be accessed. Please try again.",
+                "Database Error",
+                "Unable to load hotel information. Please check the database connection and try again.",
             )
             return
 
-        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder_path))):
+        if settings is None:
+            return
+
+        self.hotel_name_edit.setText(settings.hotel_name or "")
+        self.hotel_address_edit.setText(settings.hotel_address or "")
+        self.phone_number_edit.setText(settings.phone_number or "")
+        self.email_edit.setText(settings.email or "")
+        self.gstin_edit.setText(settings.gstin or "")
+
+    def save_hotel_information(self):
+        """Validate and persist hotel information in the settings record."""
+
+        hotel_name = self.hotel_name_edit.text().strip()
+        hotel_address = self.hotel_address_edit.text().strip()
+        phone_number = self.phone_number_edit.text().strip()
+        email = self.email_edit.text().strip()
+        gstin = self.gstin_edit.text().strip()
+
+        if not hotel_name:
             QMessageBox.warning(
                 self,
-                "Open Failed",
-                "Could not open the backup folder.",
+                "Invalid Information",
+                "Please enter the hotel name.",
             )
+            return
+
+        if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+            QMessageBox.warning(
+                self,
+                "Invalid Information",
+                "Please enter a valid email address.",
+            )
+            return
+
+        try:
+            self.settings_controller.save_hotel_information(
+                hotel_name,
+                hotel_address or None,
+                phone_number or None,
+                email or None,
+                gstin or None,
+            )
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Unable to Save Hotel Information",
+                "Unable to save hotel information. Please try again.",
+            )
+            return
+
+        QMessageBox.information(
+            self,
+            "Saved",
+            "Hotel information saved successfully.",
+        )
 
     def backup_database(self):
 

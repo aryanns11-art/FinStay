@@ -28,3 +28,9 @@ class Settings(Base):
         Boolean,
         default=False,
     )
+
+    hotel_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    hotel_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    gstin: Mapped[str | None] = mapped_column(String(50), nullable=True)
