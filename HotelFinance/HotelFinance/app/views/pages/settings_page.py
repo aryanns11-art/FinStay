@@ -1,7 +1,7 @@
 from datetime import datetime
 import re
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFrame, QGridLayout, QMessageBox, QFileDialog, QProgressDialog)
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,6 +13,8 @@ from config import DB_NAME
 
 
 class SettingsPage(QWidget):
+
+    hotel_information_saved = Signal(str)
 
     def __init__(self, session):
         super().__init__()
@@ -224,6 +226,7 @@ class SettingsPage(QWidget):
             "Saved",
             "Hotel information saved successfully.",
         )
+        self.hotel_information_saved.emit(hotel_name)
 
     def backup_database(self):
 

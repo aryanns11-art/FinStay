@@ -8,7 +8,7 @@ from app.views.widgets.navigation_button import NavigationButton
 
 class Sidebar(QFrame):
 
-    def __init__(self):
+    def __init__(self, hotel_name="Hotel Expense Tracker"):
         super().__init__()
 
         self.setFixedWidth(250)
@@ -21,14 +21,14 @@ class Sidebar(QFrame):
 
         layout.setSpacing(8)
 
-        title = QLabel("Hotel Expense Tracker")
+        self.title_label = QLabel(hotel_name)
 
-        title.setStyleSheet("""
+        self.title_label.setStyleSheet("""
             font-size:18px;
             font-weight:bold;
         """)
 
-        layout.addWidget(title)
+        layout.addWidget(self.title_label)
 
         layout.addSpacing(20)
 
@@ -73,3 +73,6 @@ class Sidebar(QFrame):
         layout.addStretch()
 
         layout.addWidget(self.exit_btn)
+
+    def set_hotel_name(self, hotel_name):
+        self.title_label.setText(hotel_name)

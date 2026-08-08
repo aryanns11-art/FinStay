@@ -30,6 +30,7 @@ from app.services.report_generator import create_monthly_report_pdf
 from app.utils.logger import logger
 
 from app.views.widgets.stat_card import StatCard
+from app.controllers.settings_controller import SettingsController
 from app.controllers.transaction_controller import TransactionController
 
 
@@ -41,6 +42,7 @@ class ReportsPage(QWidget):
 
         self.session = session
         self.transaction_controller = TransactionController(session)
+        self.settings_controller = SettingsController(session)
 
         self.init_ui()
         self.generate_report()
@@ -693,6 +695,7 @@ class ReportsPage(QWidget):
             daily_data = self.transaction_controller.get_daily_income_expense(month, year)
             income_categories = self.transaction_controller.get_income_by_category(month, year)
             expense_categories = self.transaction_controller.get_expense_by_category(month, year)
+            hotel_information = self.settings_controller.get_settings()
             create_monthly_report_pdf(
                 file_path,
                 month,
@@ -704,6 +707,7 @@ class ReportsPage(QWidget):
                 daily_data,
                 income_categories,
                 expense_categories,
+                hotel_information,
             )
 
             QMessageBox.information(self, "Report Saved", "PDF report was saved successfully.")

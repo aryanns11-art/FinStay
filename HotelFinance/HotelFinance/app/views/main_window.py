@@ -10,6 +10,7 @@ from app.views.pages.transaction_page import TransactionPage
 from app.views.pages.cash_page import CashPage
 from app.views.pages.reports_page import ReportsPage
 from app.views.pages.settings_page import SettingsPage
+from app.controllers.settings_controller import SettingsController
 
 
 class MainWindow(QMainWindow):
@@ -19,8 +20,10 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.session = session
+        self.settings_controller = SettingsController(session)
+        self.hotel_name = self.get_hotel_name()
 
-        self.setWindowTitle("Hotel Expense Tracker")
+        self.setWindowTitle(self.hotel_name)
         self.resize(1600, 900)
         self.setMinimumSize(1400, 850)
 
@@ -37,7 +40,7 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(0)
 
         # Sidebar
-        self.sidebar = Sidebar()
+        self.sidebar = Sidebar(self.hotel_name)
         main_layout.addWidget(self.sidebar)
 
         # Right side
@@ -45,7 +48,7 @@ class MainWindow(QMainWindow):
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.setSpacing(0)
 
-        self.topbar = TopBar()
+        self.topbar = TopBar(self.hotel_name)
         right_layout.addWidget(self.topbar)
 
         self.stack = QStackedWidget()
@@ -62,6 +65,8 @@ class MainWindow(QMainWindow):
         self.cash_page = ScrollablePage(CashPage(self.session))
         self.reports_page = ScrollablePage(ReportsPage(self.session))
         self.settings_page = ScrollablePage(SettingsPage(self.session))
+
+        self.settings_page.hotel_information_saved.connect(self.update_hotel_branding)
 
         self.transaction_page.transactions_changed.connect(self.dashboard_page.load_dashboard)
         self.transaction_page.transactions_changed.connect(self.cash_page.load_page)
@@ -92,6 +97,15 @@ class MainWindow(QMainWindow):
         self.sidebar.reports_btn.clicked.connect(lambda: self.change_page(3))
 
         self.sidebar.settings_btn.clicked.connect(lambda: self.change_page(4))
+
+    def get_hotel_name(self):
+        return self.settings_controller.get_hotel_name() or "Hotel Expense Tracker"
+
+    def update_hotel_branding(self, hotel_name):
+        self.hotel_name = hotel_name or "Hotel Expense Tracker"
+        self.setWindowTitle(self.hotel_name)
+        self.sidebar.set_hotel_name(self.hotel_name)
+        self.topbar.set_hotel_name(self.hotel_name)
 
     def change_page(self, index: int):
         self.stack.setCurrentIndex(index)
