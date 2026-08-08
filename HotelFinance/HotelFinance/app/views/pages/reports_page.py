@@ -24,8 +24,10 @@ from PySide6.QtCharts import (
     QChartView,
     QValueAxis,
 )
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.services.report_generator import create_monthly_report_pdf
+from app.utils.logger import logger
 
 from app.views.widgets.stat_card import StatCard
 from app.controllers.transaction_controller import TransactionController
@@ -303,11 +305,20 @@ class ReportsPage(QWidget):
 
         year = int(self.year_combo.currentText())
 
-        income = self.transaction_controller.get_monthly_income(month, year)
-
-        expense = self.transaction_controller.get_monthly_expense(month, year)
-
-        transactions = self.transaction_controller.get_monthly_transaction_count(month, year)
+        try:
+            income = self.transaction_controller.get_monthly_income(month, year)
+            expense = self.transaction_controller.get_monthly_expense(month, year)
+            transactions = self.transaction_controller.get_monthly_transaction_count(month, year)
+            self.daily_data = self.transaction_controller.get_daily_income_expense(month, year)
+            income_categories = self.transaction_controller.get_income_by_category(month, year)
+            expense_categories = self.transaction_controller.get_expense_by_category(month, year)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to generate the report. Please check the database connection and try again.",
+            )
+            return
 
         profit = income - expense
 
@@ -323,8 +334,6 @@ class ReportsPage(QWidget):
         # Daily data for selected month
         # -----------------------------------------------------
 
-        self.daily_data = self.transaction_controller.get_daily_income_expense(month, year)
-
         # -----------------------------------------------------
         # Update week selector
         # -----------------------------------------------------
@@ -334,10 +343,6 @@ class ReportsPage(QWidget):
         # -----------------------------------------------------
         # Category data
         # -----------------------------------------------------
-
-        income_categories = self.transaction_controller.get_income_by_category(month, year)
-
-        expense_categories = self.transaction_controller.get_expense_by_category(month, year)
 
         self.show_category_chart(self.income_breakdown_chart, income_categories)
 
@@ -680,21 +685,14 @@ class ReportsPage(QWidget):
             if confirm != QMessageBox.Yes:
                 return
 
-        income = self.transaction_controller.get_monthly_income(month, year)
-
-        expense = self.transaction_controller.get_monthly_expense(month, year)
-
-        profit = income - expense
-
-        transactions = self.transaction_controller.get_monthly_transaction_count(month, year)
-
-        daily_data = self.transaction_controller.get_daily_income_expense(month, year)
-
-        income_categories = self.transaction_controller.get_income_by_category(month, year)
-
-        expense_categories = self.transaction_controller.get_expense_by_category(month, year)
-
         try:
+            income = self.transaction_controller.get_monthly_income(month, year)
+            expense = self.transaction_controller.get_monthly_expense(month, year)
+            profit = income - expense
+            transactions = self.transaction_controller.get_monthly_transaction_count(month, year)
+            daily_data = self.transaction_controller.get_daily_income_expense(month, year)
+            income_categories = self.transaction_controller.get_income_by_category(month, year)
+            expense_categories = self.transaction_controller.get_expense_by_category(month, year)
             create_monthly_report_pdf(
                 file_path,
                 month,
@@ -710,5 +708,22 @@ class ReportsPage(QWidget):
 
             QMessageBox.information(self, "Report Saved", "PDF report was saved successfully.")
 
-        except Exception as exc:
-            QMessageBox.critical(self, "Export Failed", f"Unable to create PDF report.\n{exc}")
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to prepare the report for export. Please check the database connection and try again.",
+            )
+        except (OSError, PermissionError):
+            QMessageBox.critical(
+                self,
+                "PDF Export Failed",
+                "The report could not be exported. Please check the selected location and try again.",
+            )
+        except Exception:
+            logger.exception("Unexpected error while exporting a PDF report.")
+            QMessageBox.critical(
+                self,
+                "PDF Export Failed",
+                "The report could not be exported. Please check the selected location and try again.",
+            )

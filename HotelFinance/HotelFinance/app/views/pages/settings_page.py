@@ -147,10 +147,17 @@ class SettingsPage(QWidget):
 
     def open_backup_folder(self):
 
-        backup_folder = self.backup_controller.repository.backup_directory
-        backup_folder.mkdir(parents=True, exist_ok=True)
-
-        folder_path = backup_folder.resolve()
+        try:
+            backup_folder = self.backup_controller.repository.backup_directory
+            backup_folder.mkdir(parents=True, exist_ok=True)
+            folder_path = backup_folder.resolve()
+        except OSError:
+            QMessageBox.critical(
+                self,
+                "Unable to Open Folder",
+                "The backup folder could not be accessed. Please try again.",
+            )
+            return
 
         if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder_path))):
             QMessageBox.warning(
@@ -166,8 +173,12 @@ class SettingsPage(QWidget):
             QMessageBox.information(self,"Backup Complete",f"Database backed up successfully.\n\n{backup_file.name}",)
             self.load_backup_info()
 
-        except Exception as error:
-            QMessageBox.critical(self,"Backup Failed",str(error),)
+        except (OSError, RuntimeError):
+            QMessageBox.critical(
+                self,
+                "Backup Failed",
+                "The database backup could not be created. Please check the backup location and try again.",
+            )
 
 
     def load_backup_info(self):
@@ -292,7 +303,7 @@ class SettingsPage(QWidget):
         QMessageBox.critical(
             self,
             "Restore Failed",
-            error,
+            "The database could not be restored. Please verify the selected backup file and try again.",
         )
 
         self.cleanup_restore_worker()

@@ -20,4 +20,4 @@ class DailyBalanceRepository(BaseRepository):
         return self.add(daily_balance)
 
     def update(self):
-        self.session.commit()
+        return super().update()

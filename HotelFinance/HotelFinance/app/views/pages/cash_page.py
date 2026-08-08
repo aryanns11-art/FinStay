@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSpinBox,
     QTableWidget,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtCore import Qt
+from sqlalchemy.exc import SQLAlchemyError
 
 
 from app.views.widgets.stat_card import StatCard
@@ -275,9 +277,16 @@ class CashPage(QWidget):
     def load_page(self):
         """Load today's cash data."""
 
-        self.load_daily_balance()
-        self.load_summary()
-        self.load_transactions()
+        try:
+            self.load_daily_balance()
+            self.load_summary()
+            self.load_transactions()
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load today's cash information. Please check the database connection and try again.",
+            )
 
 
     def load_transactions(self):
@@ -383,7 +392,15 @@ class CashPage(QWidget):
 
         today = date.today()
 
-        balance = self.daily_balance_controller.get_balance(today)
+        try:
+            balance = self.daily_balance_controller.get_balance(today)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load the opening balance. Please check the database connection and try again.",
+            )
+            return
 
         cash = balance.cash_opening if balance else 0
         online = balance.online_opening if balance else 0
@@ -395,13 +412,21 @@ class CashPage(QWidget):
             online = dialog.get_online_opening()
 
             today = date.today()
-            balance = (self.daily_balance_controller.get_balance(today))
+            try:
+                balance = self.daily_balance_controller.get_balance(today)
 
-            if balance:
-                balance.cash_opening = cash
-                balance.online_opening = online
-                self.daily_balance_controller.update_balance()
-            else:
-                self.daily_balance_controller.create_balance(today,cash,online)
+                if balance:
+                    balance.cash_opening = cash
+                    balance.online_opening = online
+                    self.daily_balance_controller.update_balance()
+                else:
+                    self.daily_balance_controller.create_balance(today,cash,online)
+            except SQLAlchemyError:
+                QMessageBox.critical(
+                    self,
+                    "Unable to Save Opening Balance",
+                    "The opening balance could not be saved. Please try again.",
+                )
+                return
 
             self.load_page()

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from PySide6.QtCore import Signal , Qt
 from PySide6.QtWidgets import ( QComboBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView, QMessageBox )
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.views.dialogs.transaction_dialog import TransactionDialog
 from app.controllers.transaction_controller import TransactionController
@@ -124,7 +125,15 @@ class TransactionPage(QWidget):
     # =========================================================
 
     def open_transaction_dialog(self):
-        dialog = TransactionDialog(self.session)
+        try:
+            dialog = TransactionDialog(self.session)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to open the transaction form. Please check the database connection and try again.",
+            )
+            return
 
         if dialog.exec():
             self.load_transactions()
@@ -133,7 +142,15 @@ class TransactionPage(QWidget):
     def load_transactions(self):
         """Load all transactions into the table."""
 
-        transactions = self.transaction_controller.get_transactions()
+        try:
+            transactions = self.transaction_controller.get_transactions()
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load transactions. Please check the database connection and try again.",
+            )
+            return
         self.populate_table(transactions)
 
 
@@ -145,7 +162,15 @@ class TransactionPage(QWidget):
             self.load_transactions()
             return
 
-        transactions = (self.transaction_controller.search_transactions(text))
+        try:
+            transactions = self.transaction_controller.search_transactions(text)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to search transactions. Please check the database connection and try again.",
+            )
+            return
         self.populate_table(transactions)
 
         
@@ -159,14 +184,30 @@ class TransactionPage(QWidget):
 
         transaction_id = self.table.item(row,0).data(Qt.UserRole)
 
-        transaction = (self.session.query(Transaction).filter(Transaction.id == transaction_id).first())
+        try:
+            transaction = self.session.query(Transaction).filter(Transaction.id == transaction_id).first()
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load the selected transaction. Please try again.",
+            )
+            return
 
 
         if transaction:
             confirm = QMessageBox.question(self,"Confirm Delete","Delete this transaction?")
 
             if confirm == QMessageBox.Yes:
-                self.transaction_controller.delete_transaction(transaction)
+                try:
+                    self.transaction_controller.delete_transaction(transaction)
+                except SQLAlchemyError:
+                    QMessageBox.critical(
+                        self,
+                        "Unable to Delete Transaction",
+                        "The transaction could not be deleted. Please try again.",
+                    )
+                    return
 
                 self.load_transactions()
                 self.transactions_changed.emit()
@@ -205,5 +246,13 @@ class TransactionPage(QWidget):
             self.load_transactions()
             return
     
-        transactions = (self.transaction_controller.get_transactions_by_type(transaction_type))
+        try:
+            transactions = self.transaction_controller.get_transactions_by_type(transaction_type)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to filter transactions. Please check the database connection and try again.",
+            )
+            return
         self.populate_table(transactions)

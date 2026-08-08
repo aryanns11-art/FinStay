@@ -1,6 +1,7 @@
 from PySide6.QtCore import QDate, QTime
 
-from PySide6.QtWidgets import ( QComboBox, QDateEdit, QTimeEdit, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit,)
+from PySide6.QtWidgets import ( QComboBox, QDateEdit, QTimeEdit, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit, QMessageBox,)
+from sqlalchemy.exc import SQLAlchemyError
 from app.views.dialogs.base_dialog import BaseDialog
 from app.controllers.category_controller import CategoryController
 
@@ -30,7 +31,15 @@ class TransactionDialog(BaseDialog):
 
         self.category_combo.clear()
 
-        categories = self.category_controller.get_categories()
+        try:
+            categories = self.category_controller.get_categories()
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load transaction categories. Please check the database connection and try again.",
+            )
+            return
 
         for category in categories:
             self.category_combo.addItem(category.name,category.id,)
@@ -40,7 +49,15 @@ class TransactionDialog(BaseDialog):
 
         self.payment_method_combo.clear()
 
-        methods = self.payment_method_controller.get_payment_methods()
+        try:
+            methods = self.payment_method_controller.get_payment_methods()
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load payment methods. Please check the database connection and try again.",
+            )
+            return
 
         for method in methods:
             self.payment_method_combo.addItem(method.name,method.id,)
@@ -61,8 +78,18 @@ class TransactionDialog(BaseDialog):
             self.transaction_controller.add_transaction(transaction)
             self.accept()
     
-        except Exception as e:
-            print(e)
+        except ValueError:
+            QMessageBox.warning(
+                self,
+                "Invalid Transaction",
+                "Please enter a valid amount greater than zero.",
+            )
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Unable to Save Transaction",
+                "The transaction could not be saved. Please try again.",
+            )
 
     def build_ui(self):
 
