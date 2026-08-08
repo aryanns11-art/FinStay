@@ -80,6 +80,8 @@ class TransactionService:
     def get_expense_by_category(self,month,year):
         return self.repository.get_expense_by_category(month,year)
 
+    def get_daily_income_expense(self, month, year):
+        return self.repository.get_daily_income_expense(month, year)
 
     def get_today_cash_income(self, today):
         return self.repository.get_today_cash_income(today)

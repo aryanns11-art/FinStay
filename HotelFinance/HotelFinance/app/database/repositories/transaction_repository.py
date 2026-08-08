@@ -1,10 +1,8 @@
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import func
+from sqlalchemy import case, cast, func, or_, String
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, String, or_
-
 
 from app.database.repositories.base_repository import BaseRepository
 from app.models.transaction import Transaction
@@ -324,6 +322,38 @@ class TransactionRepository(BaseRepository):
             .all()
         )
 
+    def get_daily_income_expense(self, month: int, year: int):
+        return (
+            self.session.query(
+                cast(func.extract("day", Transaction.transaction_date), String).label("day"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (Category.type == "Income", Transaction.amount),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("income"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (Category.type == "Expense", Transaction.amount),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("expense"),
+            )
+            .join(Category)
+            .filter(
+                func.extract("month", Transaction.transaction_date) == month,
+                func.extract("year", Transaction.transaction_date) == year,
+            )
+            .group_by("day")
+            .order_by("day")
+            .all()
+        )
 
     def get_today_cash_income(self, today):
         result = (

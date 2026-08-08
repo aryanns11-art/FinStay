@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import (QHBoxLayout,QMainWindow,QStackedWidget,QVBoxLayout,QWidget)
+from PySide6.QtWidgets import (QHBoxLayout, QMainWindow, QStackedWidget, QVBoxLayout, QWidget)
 
+from app.views.widgets.scrollable_page import ScrollablePage
 from app.views.widgets.sidebar import Sidebar
 from app.views.widgets.topbar import TopBar
 from app.views.widgets.statusbar import StatusBar
@@ -56,17 +57,15 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(right_container)
         main_layout.setStretch(1, 1)
 
-        self.dashboard_page = DashboardPage(self.session)
-        self.transaction_page = TransactionPage(self.session)
-        self.cash_page = CashPage(self.session)
-        self.reports_page = ReportsPage(self.session)
-        self.settings_page = SettingsPage(self.session)
+        self.dashboard_page = ScrollablePage(DashboardPage(self.session))
+        self.transaction_page = ScrollablePage(TransactionPage(self.session))
+        self.cash_page = ScrollablePage(CashPage(self.session))
+        self.reports_page = ScrollablePage(ReportsPage(self.session))
+        self.settings_page = ScrollablePage(SettingsPage(self.session))
 
-
-        self.transaction_page.transactions_changed.connect(self.dashboard_page.load_dashboard   )
-        self.transaction_page.transactions_changed.connect(self.cash_page.load_page)    
-        self.transaction_page.transactions_changed.connect(self.reports_page.generate_report)   
-
+        self.transaction_page.transactions_changed.connect(self.dashboard_page.load_dashboard)
+        self.transaction_page.transactions_changed.connect(self.cash_page.load_page)
+        self.transaction_page.transactions_changed.connect(self.reports_page.generate_report)
 
         self.stack.addWidget(self.dashboard_page)
         self.stack.addWidget(self.transaction_page)
