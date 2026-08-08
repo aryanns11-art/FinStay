@@ -2,18 +2,7 @@ from datetime import datetime
 
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QFrame,
-    QGridLayout,
-    QMessageBox,
-    QFileDialog,
-    QProgressDialog
-)
+from PySide6.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QGridLayout, QMessageBox, QFileDialog, QProgressDialog)
 
 from app.controllers.backup_controller import BackupController
 from app.workers.restore_worker import RestoreWorker
@@ -23,10 +12,13 @@ from config import DB_NAME
 
 class SettingsPage(QWidget):
 
-    def __init__(self):
+    def __init__(self, session):
         super().__init__()
 
+        self.session = session
         self.backup_controller = BackupController()
+        self.restore_worker = None
+        self.restore_progress = None
 
         self.init_ui()
         self.load_backup_info()
@@ -42,9 +34,7 @@ class SettingsPage(QWidget):
         title = QLabel("Settings")
         title.setObjectName("pageTitle")
 
-        date_label = QLabel(
-            datetime.now().strftime("%A, %d %b %Y")
-        )
+        date_label = QLabel(datetime.now().strftime("%A, %d %b %Y"))
         date_label.setObjectName("dateLabel")
 
         header_layout.addWidget(title)
@@ -66,9 +56,7 @@ class SettingsPage(QWidget):
         backup_card_layout.setContentsMargins(20, 20, 20, 20)
         backup_card_layout.setSpacing(16)
 
-        description_label = QLabel(
-            "Protect your hotel financial data by creating regular database backups."
-        )
+        description_label = QLabel("Protect your hotel financial data by creating regular database backups.")
         description_label.setObjectName("descriptionLabel")
         description_label.setWordWrap(True)
         backup_card_layout.addWidget(description_label)
@@ -229,6 +217,9 @@ class SettingsPage(QWidget):
         # Close existing database connections
         # =====================================================
 
+        if self.session is not None:
+            self.session.close()
+
         engine.dispose()
 
         # =====================================================
@@ -261,17 +252,20 @@ class SettingsPage(QWidget):
         self.restore_worker = RestoreWorker(backup_file)
         self.restore_worker.restore_finished.connect(self.restore_finished)
         self.restore_worker.restore_error.connect(self.restore_failed)
+        self.restore_worker.restore_done.connect(self.cleanup_restore_worker)
         self.restore_worker.start()
 
 
     def restore_finished(self):
 
-        if hasattr(self, "restore_progress"):
+        if self.restore_progress is not None:
             self.restore_progress.close()
-
+            self.restore_progress.deleteLater()
+            self.restore_progress = None
+    
         self.restore_button.setEnabled(True)
         self.backup_button.setEnabled(True)
-
+    
         QMessageBox.information(
             self,
             "Restore Complete",
@@ -282,27 +276,58 @@ class SettingsPage(QWidget):
             ),
         )
 
+        self.cleanup_restore_worker()
+
 
     def restore_failed(self, error):
-
-        if hasattr(self, "restore_progress"):
+    
+        if self.restore_progress is not None:
             self.restore_progress.close()
-
+            self.restore_progress.deleteLater()
+            self.restore_progress = None
+    
         self.restore_button.setEnabled(True)
         self.backup_button.setEnabled(True)
+    
+        QMessageBox.critical(
+            self,
+            "Restore Failed",
+            error,
+        )
 
-        QMessageBox.critical(self,"Restore Failed",error)
+        self.cleanup_restore_worker()
 
 
+    def cleanup_restore_worker(self):
+    
+        if self.restore_worker is None:
+            return
+    
+        worker = self.restore_worker
+        self.restore_worker = None
+    
+        if worker.isRunning():
+            worker.wait(5000)
+    
+        worker.deleteLater()
+    
+    
     def close_restore_worker(self):
-
-        if hasattr(self, "restore_worker"):
-
-            if self.restore_worker.isRunning():
-                self.restore_worker.stop()
-
-
-    def closeEvent(self, event):
-
-        self.close_restore_worker()
-        event.accept()
+    
+        if self.restore_worker is None:
+            return
+    
+        worker = self.restore_worker
+    
+        if self.restore_progress is not None:
+            self.restore_progress.close()
+            self.restore_progress.deleteLater()
+            self.restore_progress = None
+    
+        if worker.isRunning():
+            worker.stop()
+            worker.wait(5000)
+    
+        self.restore_worker = None
+    
+        worker.deleteLater()

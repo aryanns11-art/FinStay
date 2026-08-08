@@ -19,6 +19,7 @@ class RestoreWorker(QThread):
 
     restore_finished = Signal()
     restore_error = Signal(str)
+    restore_done = Signal()
 
     def __init__(self, backup_file):
         super().__init__()
@@ -138,34 +139,35 @@ class RestoreWorker(QThread):
                 str(error)
             )
 
+        finally:
+            self.restore_done.emit()
+
     def stop(self):
         """Stop pg_restore safely."""
 
-        if self.process is not None:
+        process = self.process
+
+        if process is not None:
 
             try:
 
-                if self.process.poll() is None:
+                if process.poll() is None:
 
-                    self.process.terminate()
+                    process.terminate()
 
                     try:
-                        self.process.wait(
+                        process.wait(
                             timeout=5
                         )
 
                     except subprocess.TimeoutExpired:
 
-                        self.process.kill()
+                        process.kill()
 
-                        self.process.wait()
+                        process.wait()
 
             except Exception:
                 pass
-
-            finally:
-
-                self.process = None
 
         # Do NOT call quit() here.
         #

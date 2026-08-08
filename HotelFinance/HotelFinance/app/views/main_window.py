@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         self.transaction_page = TransactionPage(self.session)
         self.cash_page = CashPage(self.session)
         self.reports_page = ReportsPage(self.session)
-        self.settings_page = SettingsPage()
+        self.settings_page = SettingsPage(self.session)
 
 
         self.transaction_page.transactions_changed.connect(self.dashboard_page.load_dashboard   )
@@ -109,3 +109,9 @@ class MainWindow(QMainWindow):
             button.setChecked(False)
 
         buttons[index].setChecked(True)
+
+    def closeEvent(self, event):
+        if hasattr(self, "settings_page") and self.settings_page is not None:
+            self.settings_page.close_restore_worker()
+
+        super().closeEvent(event)
