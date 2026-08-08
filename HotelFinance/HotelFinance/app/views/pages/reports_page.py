@@ -435,9 +435,9 @@ class ReportsPage(QWidget):
 
         expense_set = QBarSet("Expense")
 
-        income_set.setColor(QColor("#2196F3"))
+        income_set.setColor(QColor("#16A34A"))
 
-        expense_set.setColor(QColor("#FF9800"))
+        expense_set.setColor(QColor("#D97706"))
 
         categories = []
 
@@ -587,14 +587,14 @@ class ReportsPage(QWidget):
         categories = []
 
         colors = [
-            QColor("#4CAF50"),
-            QColor("#2196F3"),
-            QColor("#FF9800"),
-            QColor("#9C27B0"),
-            QColor("#F44336"),
-            QColor("#00BCD4"),
-            QColor("#795548"),
-            QColor("#607D8B"),
+            QColor("#D4AF37"),
+            QColor("#16A34A"),
+            QColor("#D97706"),
+            QColor("#BFA76A"),
+            QColor("#DC2626"),
+            QColor("#52525B"),
+            QColor("#A16207"),
+            QColor("#71717A"),
         ]
 
         maximum = 0

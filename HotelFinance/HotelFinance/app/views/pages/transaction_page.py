@@ -71,6 +71,7 @@ class TransactionPage(QWidget):
         self.add_button.clicked.connect(self.open_transaction_dialog)
 
         self.delete_button = QPushButton("Delete")
+        self.delete_button.setObjectName("dangerButton")
         self.delete_button.clicked.connect(self.delete_transaction)
 
         toolbar_layout.addWidget(self.search_edit)

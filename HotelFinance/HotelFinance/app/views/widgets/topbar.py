@@ -8,10 +8,13 @@ class TopBar(QWidget):
     def __init__(self, hotel_name="Hotel Expense Tracker"):
         super().__init__()
 
+        self.setObjectName("topbar")
+
         layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 15, 20, 15)
 
         self.title_label = QLabel(hotel_name)
-
+        self.title_label.setObjectName("topbarTitle")
         self.title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         layout.addWidget(self.title_label)

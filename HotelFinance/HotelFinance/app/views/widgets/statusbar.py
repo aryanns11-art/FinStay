@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLabel, QStatusBar
+from PySide6.QtWidgets import QStatusBar
 
 
 class StatusBar(QStatusBar):
@@ -6,7 +6,3 @@ class StatusBar(QStatusBar):
 
     def __init__(self):
         super().__init__()
-
-        self.showMessage("Ready")
-
-        self.addPermanentWidget(QLabel("PostgreSQL"))

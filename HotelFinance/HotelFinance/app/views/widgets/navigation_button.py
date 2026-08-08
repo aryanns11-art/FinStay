@@ -10,28 +10,14 @@ class NavigationButton(QPushButton):
     def __init__(self, text: str, icon: str):
         super().__init__(text)
 
-        self.setIcon(qta.icon(icon, color="white"))
+        self.icon_name = icon
+        self.setObjectName("navigationButton")
         self.setIconSize(QSize(18, 18))
-
         self.setMinimumHeight(48)
         self.setCheckable(True)
+        self.toggled.connect(self.update_icon)
+        self.update_icon(False)
 
-        self.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                color: white;
-                border: none;
-                border-radius: 10px;
-                padding: 10px;
-                text-align: left;
-                font-size: 14px;
-            }
-
-            QPushButton:hover {
-                background: #2D2D2D;
-            }
-
-            QPushButton:checked {
-                background: #3B82F6;
-            }
-        """)
+    def update_icon(self, is_active):
+        color = "#D4AF37" if is_active else "#D4D4D8"
+        self.setIcon(qta.icon(self.icon_name, color=color))

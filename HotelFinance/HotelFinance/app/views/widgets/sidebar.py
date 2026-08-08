@@ -1,8 +1,11 @@
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QFrame,
     QLabel,
     QVBoxLayout,
 )
+from PySide6.QtCore import QSize
+import qtawesome as qta
 
 from app.views.widgets.navigation_button import NavigationButton
 
@@ -21,14 +24,20 @@ class Sidebar(QFrame):
 
         layout.setSpacing(8)
 
+        brand_layout = QHBoxLayout()
+        brand_layout.setSpacing(8)
+
+        brand_mark = QLabel()
+        brand_mark.setObjectName("sidebarMark")
+        brand_mark.setPixmap(qta.icon("fa5s.hotel", color="#D4AF37").pixmap(QSize(18, 18)))
+
         self.title_label = QLabel(hotel_name)
+        self.title_label.setObjectName("sidebarBrand")
 
-        self.title_label.setStyleSheet("""
-            font-size:18px;
-            font-weight:bold;
-        """)
-
-        layout.addWidget(self.title_label)
+        brand_layout.addWidget(brand_mark)
+        brand_layout.addWidget(self.title_label)
+        brand_layout.addStretch()
+        layout.addLayout(brand_layout)
 
         layout.addSpacing(20)
 
@@ -43,7 +52,7 @@ class Sidebar(QFrame):
         )
 
         self.cash_btn = NavigationButton(
-            "Cash Counter",
+            "Cash Management",
             "fa5s.cash-register",
         )
 
@@ -57,11 +66,6 @@ class Sidebar(QFrame):
             "fa5s.cog",
         )
 
-        self.exit_btn = NavigationButton(
-            "Exit",
-            "fa5s.sign-out-alt",
-        )
-
         self.dashboard_btn.setChecked(True)
 
         layout.addWidget(self.dashboard_btn)
@@ -71,8 +75,6 @@ class Sidebar(QFrame):
         layout.addWidget(self.settings_btn)
 
         layout.addStretch()
-
-        layout.addWidget(self.exit_btn)
 
     def set_hotel_name(self, hotel_name):
         self.title_label.setText(hotel_name)

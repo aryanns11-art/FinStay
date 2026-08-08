@@ -9,7 +9,6 @@ from app.controllers.backup_controller import BackupController
 from app.controllers.settings_controller import SettingsController
 from app.workers.restore_worker import RestoreWorker
 from app.database.connection import engine
-from config import DB_NAME
 
 
 class SettingsPage(QWidget):
@@ -116,17 +115,9 @@ class SettingsPage(QWidget):
         info_grid = QGridLayout()
         info_grid.setSpacing(10)
 
-        self.status_label = QLabel("Connected")
-        self.status_label.setObjectName("statusBadge")
-
-        self.database_type_label = QLabel("PostgreSQL")
-        self.database_name_label = QLabel(DB_NAME or "hotel_finance")
         self.last_backup_label = QLabel("Never")
 
         rows = [
-            ("Database Status", self.status_label),
-            ("Database Type", self.database_type_label),
-            ("Database Name", self.database_name_label),
             ("Last Backup", self.last_backup_label),
         ]
 
@@ -145,6 +136,7 @@ class SettingsPage(QWidget):
 
         self.backup_button = QPushButton("Backup Database")
         self.restore_button = QPushButton("Restore Database")
+        self.restore_button.setObjectName("dangerButton")
 
         self.backup_button.clicked.connect(self.backup_database)
         self.restore_button.clicked.connect(self.restore_database)
