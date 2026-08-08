@@ -113,6 +113,69 @@ QLineEdit:focus {
 
 
 /* ==========================================================
+   Cash Denominations
+========================================================== */
+
+QFrame#denominationSection {
+    background-color: #1F1F1F;
+    border: 1px solid #2A2A2A;
+    border-radius: 12px;
+}
+
+QFrame#denominationCard {
+    background-color: #181818;
+    border: 1px solid #2A2A2A;
+    border-radius: 10px;
+}
+
+QLabel#denominationLabel {
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QLabel#denominationQuantityLabel,
+QLabel#denominationAmount {
+    color: #A1A1AA;
+}
+
+QSpinBox#denominationInput {
+    background-color: #121212;
+    border: 1px solid #3A3A3A;
+    border-radius: 6px;
+    min-height: 28px;
+    min-width: 76px;
+    padding: 2px 6px;
+}
+
+QSpinBox#denominationInput:focus {
+    border: 1px solid #3B82F6;
+}
+
+QLabel#denominationTotalTitle {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel#denominationTotal {
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+QPushButton#denominationResetButton {
+    background-color: transparent;
+    border: 1px solid #3A3A3A;
+    color: #D4D4D8;
+    padding: 6px 12px;
+}
+
+QPushButton#denominationResetButton:hover {
+    background-color: #2D2D2D;
+}
+
+
+/* ==========================================================
    Combo Box
 ========================================================== */
 

@@ -1,5 +1,17 @@
 from datetime import datetime,date
-from PySide6.QtWidgets import ( QGridLayout, QHBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView)
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from PySide6.QtCore import Qt
 
 
@@ -11,6 +23,8 @@ from app.views.dialogs.opening_balance_dialog import (OpeningBalanceDialog)
 
 class CashPage(QWidget):
     """Cash management page."""
+
+    DENOMINATIONS = (500, 200, 100, 50, 20, 10, 5, 2, 1)
 
     def __init__(self, session):
         super().__init__()
@@ -106,6 +120,12 @@ class CashPage(QWidget):
         main_layout.addLayout(online_layout)
 
         # =====================================================
+        # Cash Denominations
+        # =====================================================
+
+        self.create_cash_denominations(main_layout)
+
+        # =====================================================
         # Today's Transactions
         # =====================================================
 
@@ -130,14 +150,127 @@ class CashPage(QWidget):
 
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.verticalHeader().setVisible(False)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.table.setAlternatingRowColors(True)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setRowCount(1)
         self.table.setItem(0,0,QTableWidgetItem(    "No transactions found."),)
         self.table.setSpan(0,0,1,6,)
+        self.adjust_table_height()
 
         main_layout.addWidget(self.table)
+
+    def adjust_table_height(self):
+        """Let the page scrollbar, rather than the table, handle vertical overflow."""
+
+        header_height = self.table.horizontalHeader().sizeHint().height()
+        frame_height = self.table.frameWidth() * 2
+        rows_height = sum(self.table.rowHeight(row) for row in range(self.table.rowCount()))
+        self.table.setFixedHeight(header_height + rows_height + frame_height)
+
+    def create_cash_denominations(self, parent_layout):
+        """Create the UI-only counter for the cash currently on hand."""
+
+        title = QLabel("Cash Denominations")
+        title.setObjectName("sectionTitle")
+        parent_layout.addWidget(title)
+
+        section = QFrame()
+        section.setObjectName("denominationSection")
+        section_layout = QVBoxLayout(section)
+        section_layout.setContentsMargins(16, 16, 16, 16)
+        section_layout.setSpacing(12)
+
+        self.denomination_inputs = {}
+        self.denomination_amount_labels = {}
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(12)
+        grid.setVerticalSpacing(12)
+
+        for index, denomination in enumerate(self.DENOMINATIONS):
+            row, column = divmod(index, 3)
+            grid.addWidget(self.create_denomination_card(denomination), row, column)
+            grid.setColumnStretch(column, 1)
+
+        section_layout.addLayout(grid)
+
+        total_layout = QHBoxLayout()
+        total_label = QLabel("Total Cash")
+        total_label.setObjectName("denominationTotalTitle")
+        self.denomination_total_label = QLabel("₹ 0.00")
+        self.denomination_total_label.setObjectName("denominationTotal")
+        total_layout.addWidget(total_label)
+        total_layout.addStretch()
+        total_layout.addWidget(self.denomination_total_label)
+        section_layout.addLayout(total_layout)
+
+        actions_layout = QHBoxLayout()
+        actions_layout.addStretch()
+        reset_button = QPushButton("Clear")
+        reset_button.setObjectName("denominationResetButton")
+        reset_button.clicked.connect(self.clear_denominations)
+        actions_layout.addWidget(reset_button)
+        section_layout.addLayout(actions_layout)
+
+        parent_layout.addWidget(section)
+
+    def create_denomination_card(self, denomination):
+        """Create one compact denomination card and retain its input widgets."""
+
+        card = QFrame()
+        card.setObjectName("denominationCard")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(14, 12, 14, 12)
+        card_layout.setSpacing(7)
+
+        denomination_label = QLabel(f"₹ {denomination}")
+        denomination_label.setObjectName("denominationLabel")
+        card_layout.addWidget(denomination_label)
+
+        quantity_layout = QHBoxLayout()
+        quantity_label = QLabel("Quantity")
+        quantity_label.setObjectName("denominationQuantityLabel")
+        quantity_input = QSpinBox()
+        quantity_input.setObjectName("denominationInput")
+        quantity_input.setRange(0, 9999)
+        quantity_input.setValue(0)
+        quantity_input.valueChanged.connect(self.update_denomination_totals)
+        quantity_layout.addWidget(quantity_label)
+        quantity_layout.addStretch()
+        quantity_layout.addWidget(quantity_input)
+        card_layout.addLayout(quantity_layout)
+
+        amount_label = QLabel("Amount: ₹ 0.00")
+        amount_label.setObjectName("denominationAmount")
+        card_layout.addWidget(amount_label)
+
+        self.denomination_inputs[denomination] = quantity_input
+        self.denomination_amount_labels[denomination] = amount_label
+        return card
+
+    def update_denomination_totals(self):
+        """Refresh denomination amounts and the overall cash total immediately."""
+
+        total = 0
+        for denomination, quantity_input in self.denomination_inputs.items():
+            amount = denomination * quantity_input.value()
+            self.denomination_amount_labels[denomination].setText(
+                f"Amount: ₹ {amount:,.2f}"
+            )
+            total += amount
+
+        self.denomination_total_label.setText(f"₹ {total:,.2f}")
+
+    def clear_denominations(self):
+        """Reset the in-memory denomination counter without changing daily balances."""
+
+        for quantity_input in self.denomination_inputs.values():
+            quantity_input.setValue(0)
+        self.update_denomination_totals()
 
     def load_page(self):
         """Load today's cash data."""
@@ -242,6 +375,8 @@ class CashPage(QWidget):
             self.table.clearSelection()
             self.table.setItem(0,0,QTableWidgetItem("No transactions found."))
             self.table.setSpan(0, 0, 1, 6)
+
+        self.adjust_table_height()
 
 
     def open_opening_balance_dialog(self):
