@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Settings</h1>
+</div>
+
+<!-- ── Hotel Information ── -->
+<h2 class="section-title">Hotel Information</h2>
+<div class="card">
+  <form method="post" action="{{ url_for('settings.save_hotel') }}">
+    <div class="form-grid">
+      <div class="form-group form-group--full">
+        <label class="form-label">Hotel Name *</label>
+        <input type="text" name="hotel_name" class="input-text"
+               value="{{ settings.hotel_name if settings and settings.hotel_name else '' }}"
+               placeholder="Hotel Name" required />
+      </div>
+      <div class="form-group form-group--full">
+        <label class="form-label">Hotel Address</label>
+        <input type="text" name="hotel_address" class="input-text"
+               value="{{ settings.hotel_address if settings and settings.hotel_address else '' }}"
+               placeholder="Hotel Address" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="text" name="phone_number" class="input-text"
+               value="{{ settings.phone_number if settings and settings.phone_number else '' }}"
+               placeholder="Phone Number" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" class="input-text"
+               value="{{ settings.email if settings and settings.email else '' }}"
+               placeholder="Email Address" />
+      </div>
+      <div class="form-group form-group--full">
+        <label class="form-label">GSTIN (Optional)</label>
+        <input type="text" name="gstin" class="input-text"
+               value="{{ settings.gstin if settings and settings.gstin else '' }}"
+               placeholder="GSTIN" />
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+  </form>
+</div>
+
+<!-- ── Backup ── -->
+<h2 class="section-title" style="margin-top:32px;">Backup &amp; Restore</h2>
+<div class="card">
+  <p class="card-caption">Protect your hotel financial data by creating regular database backups.</p>
+
+  <div class="summary-table-wrap" style="margin:12px 0;">
+    <table class="summary-table">
+      <tr>
+        <td class="summary-label">Last Backup</td>
+        <td class="summary-value">{{ last_backup_time or 'Never' }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <form method="post" action="{{ url_for('settings.backup') }}" style="display:inline;">
+    <button type="submit" class="btn btn-secondary">Backup Database</button>
+  </form>
+</div>
+{% endblock %}

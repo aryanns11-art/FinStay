@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Dashboard</h1>
+  <span class="page-date">{{ today.strftime('%A, %d %b %Y') }}</span>
+</div>
+
+<!-- ── Stat cards row 1 ── -->
+<div class="stat-grid">
+  <div class="stat-card stat-card--profit">
+    <div class="stat-label">Today's Net Profit</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(profit|float) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Today's Income</div>
+    <div class="stat-value income-value">₹ {{ "%.2f"|format(income|float) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Today's Expense</div>
+    <div class="stat-value expense-value">₹ {{ "%.2f"|format(expense|float) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Cash Income</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(cash_income|float) }}</div>
+  </div>
+</div>
+
+<!-- ── Stat cards row 2 ── -->
+<div class="stat-grid" style="margin-top:16px;">
+  <div class="stat-card">
+    <div class="stat-label">Cash Expense</div>
+    <div class="stat-value expense-value">₹ {{ "%.2f"|format(cash_expense|float) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Online Income</div>
+    <div class="stat-value income-value">₹ {{ "%.2f"|format(online_income|float) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Online Expense</div>
+    <div class="stat-value expense-value">₹ {{ "%.2f"|format(online_expense|float) }}</div>
+  </div>
+  <div class="stat-card" style="visibility:hidden;"></div>
+</div>
+
+<!-- ── Today's Summary ── -->
+<h2 class="section-title" style="margin-top:32px;">Today's Summary</h2>
+<div class="card">
+  <p class="card-caption">Key totals and leading entries</p>
+  <table class="summary-table">
+    <tbody>
+      <tr>
+        <td class="summary-label">Income Transactions</td>
+        <td class="summary-value">{{ income_count }}</td>
+      </tr>
+      <tr>
+        <td class="summary-label">Expense Transactions</td>
+        <td class="summary-value">{{ expense_count }}</td>
+      </tr>
+      <tr>
+        <td class="summary-label">Highest Income</td>
+        <td class="summary-value">
+          {% if highest_income %}
+            {{ highest_income.category.name }} ({{ highest_income.payment_method.name }})
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="summary-label">Income Amount</td>
+        <td class="summary-value income-value">
+          {% if highest_income %}₹ {{ "%.2f"|format(highest_income.amount|float) }}{% else %}₹ 0.00{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="summary-label">Highest Expense</td>
+        <td class="summary-value">
+          {% if highest_expense %}
+            {{ highest_expense.category.name }} ({{ highest_expense.payment_method.name }})
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="summary-label">Expense Amount</td>
+        <td class="summary-value expense-value">
+          {% if highest_expense %}₹ {{ "%.2f"|format(highest_expense.amount|float) }}{% else %}₹ 0.00{% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

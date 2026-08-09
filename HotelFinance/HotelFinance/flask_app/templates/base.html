@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Hotel Finance{% endblock %} — {{ hotel_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ===================== SIDEBAR ===================== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">🏨</span>
+    <span class="brand-name">{{ hotel_name }}</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="{{ url_for('dashboard.index') }}"
+       class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a href="{{ url_for('transactions.index') }}"
+       class="nav-item {% if request.endpoint and request.endpoint.startswith('transactions') %}active{% endif %}">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label">Transactions</span>
+    </a>
+    <a href="{{ url_for('cash.index') }}"
+       class="nav-item {% if request.endpoint and request.endpoint.startswith('cash') %}active{% endif %}">
+      <span class="nav-icon">💵</span>
+      <span class="nav-label">Cash Management</span>
+    </a>
+    <a href="{{ url_for('reports.index') }}"
+       class="nav-item {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">Reports</span>
+    </a>
+    <a href="{{ url_for('settings.index') }}"
+       class="nav-item {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- ===================== MAIN ======================== -->
+<div class="main-wrapper">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <span class="topbar-title">{{ hotel_name }}</span>
+    <span class="topbar-date">{{ now.strftime('%A, %d %b %Y') if now is defined else '' }}</span>
+  </header>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            {{ message }}
+            <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Page content -->
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

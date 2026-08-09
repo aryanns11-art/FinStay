@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Cash Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Cash Management</h1>
+  <span class="page-date">{{ today.strftime('%A, %d %b %Y') }}</span>
+</div>
+
+<!-- ── Opening Balance button ── -->
+<div class="toolbar" style="justify-content:flex-end;">
+  <button class="btn btn-secondary" onclick="openModal('balanceModal')">
+    {% if balance %}Update Opening Balance{% else %}Set Opening Balance{% endif %}
+  </button>
+</div>
+
+<!-- ── Cash section ── -->
+<h2 class="section-title">Cash</h2>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Opening</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(cash_opening) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Income</div>
+    <div class="stat-value income-value">₹ {{ "%.2f"|format(cash_income) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expense</div>
+    <div class="stat-value expense-value">₹ {{ "%.2f"|format(cash_expense) }}</div>
+  </div>
+  <div class="stat-card stat-card--profit">
+    <div class="stat-label">Closing</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(cash_closing) }}</div>
+  </div>
+</div>
+
+<!-- ── Online section ── -->
+<h2 class="section-title" style="margin-top:24px;">Online</h2>
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Opening</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(online_opening) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Income</div>
+    <div class="stat-value income-value">₹ {{ "%.2f"|format(online_income) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Expense</div>
+    <div class="stat-value expense-value">₹ {{ "%.2f"|format(online_expense) }}</div>
+  </div>
+  <div class="stat-card stat-card--profit">
+    <div class="stat-label">Closing</div>
+    <div class="stat-value">₹ {{ "%.2f"|format(online_closing) }}</div>
+  </div>
+</div>
+
+<!-- ── Cash Denominations ── -->
+<h2 class="section-title" style="margin-top:24px;">Cash Denominations</h2>
+<div class="card">
+  <form method="post" action="{{ url_for('cash.save_denominations') }}" id="denomForm">
+    <div class="denom-grid">
+      {% set denom_map = {
+        500: denom_record.denomination_500 if denom_record else 0,
+        200: denom_record.denomination_200 if denom_record else 0,
+        100: denom_record.denomination_100 if denom_record else 0,
+        50:  denom_record.denomination_50  if denom_record else 0,
+        20:  denom_record.denomination_20  if denom_record else 0,
+        10:  denom_record.denomination_10  if denom_record else 0,
+        5:   denom_record.denomination_5   if denom_record else 0,
+        2:   denom_record.denomination_2   if denom_record else 0,
+        1:   denom_record.denomination_1   if denom_record else 0
+      } %}
+      {% for d in denominations %}
+      <div class="denom-card" data-denom="{{ d }}">
+        <div class="denom-face">₹ {{ d }}</div>
+        <div class="denom-row">
+          <label class="denom-qty-label">Qty</label>
+          <input type="number" name="d{{ d }}" min="0" max="9999"
+                 value="{{ denom_map[d] }}"
+                 class="denom-input" data-denom="{{ d }}"
+                 oninput="recalcTotal()" />
+        </div>
+        <div class="denom-amount" id="amt{{ d }}">
+          ₹ {{ "%.2f"|format((denom_map[d] * d)|float) }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="denom-total-row">
+      <span class="denom-total-label">Total Cash</span>
+      <span class="denom-total-value" id="denomTotal">
+        ₹ {{ "%.2f"|format((denom_record.total if denom_record and denom_record.total else 0)|float) }}
+      </span>
+    </div>
+
+    <div class="denom-actions">
+      <button type="button" class="btn btn-ghost" onclick="clearDenominations()">Clear</button>
+      <button type="submit" class="btn btn-primary">Save Denominations</button>
+    </div>
+  </form>
+</div>
+
+<!-- ── Today's Transactions ── -->
+<h2 class="section-title" style="margin-top:24px;">Today's Transactions</h2>
+<div class="card" style="padding:0; overflow:hidden;">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date</th><th>Time</th><th>Category</th>
+        <th>Payment</th><th>Amount</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if transactions %}
+        {% for t in transactions %}
+        <tr>
+          <td>{{ t.transaction_date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ t.transaction_time.strftime('%H:%M') }}</td>
+          <td>{{ t.category.name }}</td>
+          <td>{{ t.payment_method.name }}</td>
+          <td class="{{ 'income-value' if t.category.type == 'Income' else 'expense-value' }}">
+            ₹ {{ "%.2f"|format(t.amount|float) }}
+          </td>
+          <td>{{ t.description or '—' }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="6" class="empty-row">No transactions today.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════ OPENING BALANCE MODAL ══════════ -->
+<div id="balanceModal" class="modal-overlay" style="display:none;">
+  <div class="modal modal--sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Set Opening Balance</h2>
+      <button class="modal-close" onclick="closeModal('balanceModal')">×</button>
+    </div>
+    <form method="post" action="{{ url_for('cash.save_opening_balance') }}" class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Cash Opening</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" name="cash_opening" step="0.01" min="0"
+                 value="{{ cash_opening }}"
+                 class="input-text input-with-prefix" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label class="form-label">Online Opening</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" name="online_opening" step="0.01" min="0"
+                 value="{{ online_opening }}"
+                 class="input-text input-with-prefix" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('balanceModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DENOMS = [500,200,100,50,20,10,5,2,1];
+
+function recalcTotal() {
+  let total = 0;
+  DENOMS.forEach(function(d) {
+    const qty = parseInt(document.querySelector('[data-denom="'+d+'"] .denom-input').value) || 0;
+    const amt = qty * d;
+    document.getElementById('amt'+d).textContent = '₹ ' + amt.toFixed(2);
+    total += amt;
+  });
+  document.getElementById('denomTotal').textContent = '₹ ' + total.toFixed(2);
+}
+
+function clearDenominations() {
+  DENOMS.forEach(function(d) {
+    document.querySelector('[data-denom="'+d+'"] .denom-input').value = 0;
+  });
+  recalcTotal();
+}
+
+function openModal(id)  { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) { if (e.target === o) o.style.display = 'none'; });
+});
+</script>
+{% endblock %}
