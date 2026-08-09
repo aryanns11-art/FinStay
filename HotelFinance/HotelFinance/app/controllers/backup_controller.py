@@ -12,7 +12,7 @@ class BackupController:
     # =====================================================
 
     def backup_database(self):
-        """Create a PostgreSQL database backup."""
+        """Create a SQLite database backup."""
 
         return self.repository.create_backup()
 

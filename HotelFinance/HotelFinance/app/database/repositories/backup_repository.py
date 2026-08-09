@@ -1,25 +1,17 @@
-import os
-import subprocess
+import sqlite3
+import time
 from datetime import datetime
 from pathlib import Path
 
-from config import (
-    DB_HOST,
-    DB_PORT,
-    DB_NAME,
-    DB_USER,
-    DB_PASSWORD,
-)
-
-from app.utils.postgres_tools import PostgreSQLTools
+from config import BACKUP_DIR, DATABASE_PATH
 
 
 class BackupRepository:
-    """Handle PostgreSQL database backup and restore operations."""
+    """Handle SQLite database backup and restore operations."""
 
     def __init__(self):
 
-        self.backup_directory = Path("backups")
+        self.backup_directory = Path(BACKUP_DIR)
 
         self.backup_directory.mkdir(
             parents=True,
@@ -31,13 +23,11 @@ class BackupRepository:
     # =====================================================
 
     def create_backup(self):
-        """Create a PostgreSQL database backup."""
+        """Create a consistent SQLite database backup using the online backup API."""
 
-        pg_dump = PostgreSQLTools.find_pg_dump()
-
-        if not pg_dump:
+        if not DATABASE_PATH.exists():
             raise RuntimeError(
-                "pg_dump.exe could not be found."
+                "Database file does not exist."
             )
 
         timestamp = datetime.now().strftime(
@@ -46,50 +36,26 @@ class BackupRepository:
 
         backup_file = (
             self.backup_directory
-            / f"hotel_finance_{timestamp}.backup"
+            / f"hotel_finance_{timestamp}.db"
         )
 
-        environment = os.environ.copy()
+        try:
+            source = sqlite3.connect(str(DATABASE_PATH))
+            try:
+                destination = sqlite3.connect(str(backup_file))
+                try:
+                    source.backup(destination)
+                finally:
+                    destination.close()
+            finally:
+                source.close()
 
-        environment["PGPASSWORD"] = DB_PASSWORD
-
-        command = [
-            str(pg_dump),
-
-            "--host",
-            DB_HOST,
-
-            "--port",
-            str(DB_PORT),
-
-            "--username",
-            DB_USER,
-
-            "--dbname",
-            DB_NAME,
-
-            "--format",
-            "custom",
-
-            "--file",
-            str(backup_file),
-        ]
-
-        result = subprocess.run(
-            command,
-            env=environment,
-            capture_output=True,
-            text=True,
-        )
-
-        if result.returncode != 0:
-
+        except Exception:
             if backup_file.exists():
                 backup_file.unlink()
 
             raise RuntimeError(
-                result.stderr.strip()
-                or "Database backup failed."
+                "Database backup could not be created."
             )
 
         return backup_file
@@ -99,14 +65,13 @@ class BackupRepository:
     # =====================================================
 
     def restore_backup(self, backup_file):
-        """Restore PostgreSQL database from a backup file."""
+        """
+        Restore the SQLite database from a backup file.
 
-        pg_restore = PostgreSQLTools.find_pg_restore()
-
-        if not pg_restore:
-            raise RuntimeError(
-                "pg_restore.exe could not be found."
-            )
+        Uses the SQLite online backup API to copy into the live database file.
+        This avoids Windows file-lock failures that occur when replacing the
+        database file while handles may still be closing.
+        """
 
         backup_file = Path(backup_file)
 
@@ -115,49 +80,35 @@ class BackupRepository:
                 "Selected backup file does not exist."
             )
 
-        environment = os.environ.copy()
+        self._validate_backup_file(backup_file)
 
-        environment["PGPASSWORD"] = DB_PASSWORD
+        DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-        command = [
-            str(pg_restore),
+        last_error = None
 
-            "--host",
-            DB_HOST,
+        for _ in range(15):
+            try:
+                destination = sqlite3.connect(str(DATABASE_PATH), timeout=30)
+                try:
+                    source = sqlite3.connect(str(backup_file))
+                    try:
+                        source.backup(destination)
+                        destination.commit()
+                    finally:
+                        source.close()
+                finally:
+                    destination.close()
 
-            "--port",
-            str(DB_PORT),
+                self._remove_sidecar_files(DATABASE_PATH)
+                return True
 
-            "--username",
-            DB_USER,
+            except Exception as error:
+                last_error = error
+                time.sleep(0.2)
 
-            "--dbname",
-            DB_NAME,
-
-            "--clean",
-
-            "--if-exists",
-
-            "--no-owner",
-
-            str(backup_file),
-        ]
-
-        result = subprocess.run(
-            command,
-            env=environment,
-            capture_output=True,
-            text=True,
-        )
-
-        if result.returncode != 0:
-
-            raise RuntimeError(
-                result.stderr.strip()
-                or "Database restore failed."
-            )
-
-        return True
+        raise RuntimeError(
+            "Database restore failed. Please verify the backup file."
+        ) from last_error
 
     # =====================================================
     # Last Backup
@@ -168,7 +119,7 @@ class BackupRepository:
 
         backups = list(
             self.backup_directory.glob(
-                "hotel_finance_*.backup"
+                "hotel_finance_*.db"
             )
         )
 
@@ -179,3 +130,60 @@ class BackupRepository:
             backups,
             key=lambda file: file.stat().st_mtime,
         )
+
+    def get_all_backups(self):
+        """Return all backup files sorted newest first."""
+
+        backups = list(
+            self.backup_directory.glob(
+                "hotel_finance_*.db"
+            )
+        )
+
+        return sorted(
+            backups,
+            key=lambda file: file.stat().st_mtime,
+            reverse=True,
+        )
+
+    # =====================================================
+    # Helpers
+    # =====================================================
+
+    @staticmethod
+    def _validate_backup_file(backup_file: Path):
+        """Ensure the selected file is a readable SQLite database with tables."""
+
+        try:
+            connection = sqlite3.connect(
+                f"file:{backup_file.as_posix()}?mode=ro",
+                uri=True,
+            )
+            try:
+                row = connection.execute(
+                    "SELECT count(*) FROM sqlite_master WHERE type='table'"
+                ).fetchone()
+            finally:
+                connection.close()
+
+        except sqlite3.Error as error:
+            raise RuntimeError(
+                "Database restore failed. Please verify the backup file."
+            ) from error
+
+        if not row or row[0] == 0:
+            raise RuntimeError(
+                "Database restore failed. Please verify the backup file."
+            )
+
+    @staticmethod
+    def _remove_sidecar_files(database_path: Path):
+        """Remove leftover SQLite WAL/SHM files after replacing the database."""
+
+        for suffix in ("-wal", "-shm"):
+            sidecar = Path(str(database_path) + suffix)
+            if sidecar.exists():
+                try:
+                    sidecar.unlink()
+                except OSError:
+                    pass

@@ -1,4 +1,5 @@
 from datetime import datetime
+import gc
 import re
 
 from PySide6.QtCore import Qt, Signal
@@ -251,13 +252,13 @@ class SettingsPage(QWidget):
 
         backup_file, _ = QFileDialog.getOpenFileName(
             self,
-            "Select PostgreSQL Backup",
+            "Select Database Backup",
             str(
                 self.backup_controller
                 .repository
                 .backup_directory
             ),
-            "PostgreSQL Backup (*.backup);;All Files (*)",
+            "SQLite Backup (*.db);;All Files (*)",
         )
 
         if not backup_file:
@@ -286,6 +287,8 @@ class SettingsPage(QWidget):
             self.session.close()
 
         engine.dispose()
+
+        gc.collect()
 
         # =====================================================
         # Disable buttons

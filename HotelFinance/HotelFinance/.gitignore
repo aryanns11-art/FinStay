@@ -17,6 +17,9 @@ logs/
 # Database Backups
 backups/
 
+# Local SQLite database
+data/
+
 # Generated Reports
 reports/
 exports/

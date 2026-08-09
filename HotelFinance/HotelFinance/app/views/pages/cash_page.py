@@ -20,6 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.views.widgets.stat_card import StatCard
 from app.controllers.transaction_controller import (TransactionController)
 from app.controllers.daily_balance_controller import (DailyBalanceController)
+from app.controllers.cash_denomination_controller import CashDenominationController
 from app.views.dialogs.opening_balance_dialog import (OpeningBalanceDialog)
 
 
@@ -32,8 +33,9 @@ class CashPage(QWidget):
         super().__init__()
 
         self.session = session
-        self.transaction_controller = (TransactionController(session))
-        self.daily_balance_controller = ( DailyBalanceController(session))
+        self.transaction_controller = TransactionController(session)
+        self.daily_balance_controller = DailyBalanceController(session)
+        self.cash_denomination_controller = CashDenominationController(session)
 
         self.init_ui()
         self.load_page()
@@ -220,6 +222,11 @@ class CashPage(QWidget):
 
         parent_layout.addWidget(section)
 
+        save_button = QPushButton("Save Denominations")
+        save_button.setObjectName("denominationSaveButton")
+        save_button.clicked.connect(self.save_denomination_values)
+        actions_layout.addWidget(save_button)
+
     def create_denomination_card(self, denomination):
         """Create one compact denomination card and retain its input widgets."""
 
@@ -274,6 +281,78 @@ class CashPage(QWidget):
             quantity_input.setValue(0)
         self.update_denomination_totals()
 
+    def load_denomination_values(self):
+        """Load today's saved denomination counts from the database."""
+
+        today = date.today()
+        try:
+            record = self.cash_denomination_controller.get_by_date(today)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to load today's cash denominations. Please check the database and try again.",
+            )
+            return
+
+        if record:
+            self.denomination_inputs[500].setValue(record.denomination_500)
+            self.denomination_inputs[200].setValue(record.denomination_200)
+            self.denomination_inputs[100].setValue(record.denomination_100)
+            self.denomination_inputs[50].setValue(record.denomination_50)
+            self.denomination_inputs[20].setValue(record.denomination_20)
+            self.denomination_inputs[10].setValue(record.denomination_10)
+            self.denomination_inputs[5].setValue(record.denomination_5)
+            self.denomination_inputs[2].setValue(record.denomination_2)
+            self.denomination_inputs[1].setValue(record.denomination_1)
+        else:
+            self.clear_denominations()
+
+        self.update_denomination_totals()
+
+    def save_denomination_values(self):
+        """Save the current denomination counts for today."""
+
+        today = date.today()
+        try:
+            record = self.cash_denomination_controller.get_or_create(today)
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Database Error",
+                "Unable to save today's cash denominations. Please check the database and try again.",
+            )
+            return
+
+        record.denomination_500 = self.denomination_inputs[500].value()
+        record.denomination_200 = self.denomination_inputs[200].value()
+        record.denomination_100 = self.denomination_inputs[100].value()
+        record.denomination_50 = self.denomination_inputs[50].value()
+        record.denomination_20 = self.denomination_inputs[20].value()
+        record.denomination_10 = self.denomination_inputs[10].value()
+        record.denomination_5 = self.denomination_inputs[5].value()
+        record.denomination_2 = self.denomination_inputs[2].value()
+        record.denomination_1 = self.denomination_inputs[1].value()
+        record.total = sum(
+            denomination * self.denomination_inputs[denomination].value()
+            for denomination in self.DENOMINATIONS
+        )
+
+        try:
+            self.cash_denomination_controller.save_or_update(record)
+            self.update_denomination_totals()
+            QMessageBox.information(
+                self,
+                "Saved",
+                "Today's denomination counts have been saved.",
+            )
+        except SQLAlchemyError:
+            QMessageBox.critical(
+                self,
+                "Unable to Save Denominations",
+                "The denomination counts could not be saved. Please try again.",
+            )
+
     def load_page(self):
         """Load today's cash data."""
 
@@ -281,6 +360,7 @@ class CashPage(QWidget):
             self.load_daily_balance()
             self.load_summary()
             self.load_transactions()
+            self.load_denomination_values()
         except SQLAlchemyError:
             QMessageBox.critical(
                 self,

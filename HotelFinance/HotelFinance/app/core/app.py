@@ -54,7 +54,7 @@ def run():
         QMessageBox.critical(
             None,
             "Database Error",
-            "Unable to connect to the database. Please check the database connection and try again.",
+            "Unable to open the local database. Please try again.",
         )
         return 1
     finally:
