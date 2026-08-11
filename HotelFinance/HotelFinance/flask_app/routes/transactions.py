@@ -7,6 +7,7 @@ from app.controllers.transaction_controller import TransactionController
 from app.controllers.category_controller import CategoryController
 from app.controllers.payment_method_controller import PaymentMethodController
 from app.controllers.settings_controller import SettingsController
+from app.controllers.bank_account_controller import BankAccountController
 from app.models.transaction import Transaction
 
 bp = Blueprint("transactions", __name__)
@@ -20,6 +21,7 @@ def index():
         settings = SettingsController(session)
         cats     = CategoryController(session)
         methods  = PaymentMethodController(session)
+        bank_ctrl = BankAccountController(session)
 
         keyword  = request.args.get("q", "").strip()
         tx_type  = request.args.get("type", "All")
@@ -33,6 +35,7 @@ def index():
 
         categories      = cats.get_categories()
         payment_methods = methods.get_payment_methods()
+        bank_accounts   = bank_ctrl.get_active_accounts()
         hotel_name      = settings.get_hotel_name() or "Hotel Finance"
 
         return render_template(
@@ -41,6 +44,7 @@ def index():
             transactions=transactions,
             categories=categories,
             payment_methods=payment_methods,
+            bank_accounts=bank_accounts,
             keyword=keyword,
             tx_type=tx_type,
             today=date.today().isoformat(),
@@ -64,6 +68,31 @@ def add():
         tx_date            = date.fromisoformat(request.form["transaction_date"])
         tx_time            = datetime.strptime(request.form["transaction_time"], "%H:%M").time()
 
+        # Determine payment method name for validation
+        methods   = PaymentMethodController(session)
+        all_methods = methods.get_payment_methods()
+        method_map  = {m.id: m.name for m in all_methods}
+        method_name = method_map.get(payment_method_id, "")
+
+        # Resolve bank_account_id with server-side validation
+        bank_account_id = None
+        if method_name == "Online":
+            raw_bank_id = request.form.get("bank_account_id", "").strip()
+            if not raw_bank_id:
+                flash("Online transactions require a bank account.", "error")
+                return redirect(url_for("transactions.index"))
+            try:
+                raw_bank_id = int(raw_bank_id)
+            except (ValueError, TypeError):
+                flash("Online transactions require a bank account.", "error")
+                return redirect(url_for("transactions.index"))
+
+            bank_ctrl = BankAccountController(session)
+            # validate_for_online_transaction raises ValueError if invalid/inactive
+            bank_ctrl.validate_for_online_transaction(raw_bank_id)
+            bank_account_id = raw_bank_id
+        # Cash transactions: bank_account_id stays NULL
+
         transaction = Transaction(
             category_id=category_id,
             payment_method_id=payment_method_id,
@@ -71,13 +100,15 @@ def add():
             description=description,
             transaction_date=tx_date,
             transaction_time=tx_time,
+            bank_account_id=bank_account_id,
         )
 
         tx = TransactionController(session)
         tx.add_transaction(transaction)
         flash("Transaction saved successfully.", "success")
+
     except ValueError as e:
-        flash(f"Invalid data: {e}", "error")
+        flash(str(e), "error")
     except Exception:
         from app.utils.logger import logger
         logger.exception("Add transaction error")

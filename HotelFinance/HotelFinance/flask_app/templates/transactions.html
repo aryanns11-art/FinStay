@@ -58,7 +58,12 @@
           <td class="{{ 'income-value' if t.category.type == 'Income' else 'expense-value' }}">
             ₹ {{ "%.2f"|format(t.amount|float) }}
           </td>
-          <td>{{ t.payment_method.name }}</td>
+          <td>
+            {{ t.payment_method.name }}
+            {% if t.bank_account %}
+              <br><span style="font-size:0.75rem; color:var(--text-muted);">{{ t.bank_account.name }}</span>
+            {% endif %}
+          </td>
           <td>{{ t.description or '—' }}</td>
           <td>
             <form method="post" action="{{ url_for('transactions.delete', transaction_id=t.id) }}"
@@ -96,11 +101,31 @@
         </div>
         <div class="form-group">
           <label class="form-label">Payment Method *</label>
-          <select name="payment_method_id" class="input-select" required>
+          <select name="payment_method_id" id="paymentMethodSelect" class="input-select" required>
             {% for m in payment_methods %}
-              <option value="{{ m.id }}">{{ m.name }}</option>
+              <option value="{{ m.id }}" data-name="{{ m.name }}">{{ m.name }}</option>
             {% endfor %}
           </select>
+        </div>
+      </div>
+
+      <!-- Bank account field — shown only when Online is selected -->
+      <div class="form-row" id="bankAccountRow" style="display:none;">
+        <div class="form-group" style="width:100%;">
+          <label class="form-label">Bank Account *</label>
+          <select name="bank_account_id" id="bankAccountSelect" class="input-select">
+            <option value="">— Select bank account —</option>
+            {% for acct in bank_accounts %}
+              <option value="{{ acct.id }}">
+                {{ acct.name }}{% if acct.account_number %} — {{ acct.account_number }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          {% if not bank_accounts %}
+            <small style="color:var(--text-muted); margin-top:4px; display:block;">
+              No active bank accounts. <a href="{{ url_for('bank_accounts.index') }}" style="color:var(--gold);">Add one here.</a>
+            </small>
+          {% endif %}
         </div>
       </div>
 
@@ -271,5 +296,37 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
     if (e.target === overlay) overlay.style.display = 'none';
   });
 });
+
+// ── Bank account field toggle ──────────────────────────────────────────
+var paymentSelect  = document.getElementById('paymentMethodSelect');
+var bankRow        = document.getElementById('bankAccountRow');
+var bankSelect     = document.getElementById('bankAccountSelect');
+
+function updateBankAccountVisibility() {
+  var selectedOption = paymentSelect.options[paymentSelect.selectedIndex];
+  var methodName     = selectedOption ? selectedOption.getAttribute('data-name') : '';
+
+  if (methodName === 'Online') {
+    bankRow.style.display    = '';
+    bankSelect.required      = true;
+  } else {
+    bankRow.style.display    = 'none';
+    bankSelect.required      = false;
+    bankSelect.value         = '';   // clear selection when hidden
+  }
+}
+
+// Run on page load in case a method is pre-selected
+updateBankAccountVisibility();
+
+// Run whenever the payment method changes
+paymentSelect.addEventListener('change', updateBankAccountVisibility);
+
+// Re-run when the Add Transaction modal opens (in case DOM state changed)
+document.querySelector('[onclick="openModal(\'addModal\')"]')
+  .addEventListener('click', function() {
+    // slight delay to let modal render
+    setTimeout(updateBankAccountVisibility, 50);
+  });
 </script>
 {% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}Bank Accounts{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Bank Accounts</h1>
+    <p style="color:var(--text-muted); margin:2px 0 0 0; font-size:0.875rem;">
+      Manage your online payment accounts
+    </p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('addAccountModal')">
+    + Add Bank Account
+  </button>
+</div>
+
+<!-- ══════════════════ ACCOUNT CARDS ══════════════════ -->
+{% if accounts %}
+  <div style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+    {% for acct in accounts %}
+      {% set s = summaries.get(acct.id, {}) %}
+      <div class="card" style="
+        padding: 0;
+        border: 1px solid {% if acct.is_active %}var(--border){% else %}var(--border){% endif %};
+        opacity: {% if acct.is_active %}1{% else %}0.6{% endif %};
+      ">
+        <!-- Card top bar -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px 12px 20px;
+          border-bottom: 1px solid var(--border);
+        ">
+          <!-- Account identity -->
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:1.5rem;">🏦</span>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.05rem; font-weight:600; color:var(--text-primary);">
+                  {{ acct.name }}
+                </span>
+                {% if not acct.is_active %}
+                  <span style="
+                    font-size:0.7rem; font-weight:600; letter-spacing:0.04em;
+                    padding:2px 7px; border-radius:3px;
+                    background:var(--surface-2); color:var(--text-muted);
+                    border:1px solid var(--border);
+                  ">INACTIVE</span>
+                {% endif %}
+              </div>
+              {% if acct.account_number %}
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                  {{ acct.account_number }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div style="display:flex; gap:8px; align-items:center;">
+            {% if acct.is_active %}
+              <button
+                class="btn btn-secondary btn-sm"
+                onclick="openManageModal(
+                  {{ acct.id }},
+                  '{{ acct.name | e }}',
+                  {{ s.opening_balance | default(0) | float }}
+                )">
+                Manage
+              </button>
+              <button
+                class="btn btn-ghost btn-sm"
+                onclick="openEditModal(
+                  {{ acct.id }},
+                  '{{ acct.name | e }}',
+                  '{{ acct.account_number or '' | e }}'
+                )">
+                Edit
+              </button>
+            {% else %}
+              <span style="font-size:0.8rem; color:var(--text-muted);">Deactivated</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Financial summary row -->
+        <div style="
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 0;
+          padding: 0;
+        ">
+          {% set cells = [
+            ('Opening',      s.opening_balance,   'var(--text-primary)', 'not-set'),
+            ('Income',       s.income,             'var(--color-income)', 'zero'),
+            ('Expense',      s.expense,            'var(--color-expense)', 'zero'),
+            ('Balance',      s.current_balance,   'var(--gold)',          'not-set'),
+            ('Transactions', s.transaction_count, 'var(--text-primary)', 'zero'),
+          ] %}
+          {% for label, val, color, fallback in cells %}
+            <div style="
+              padding: 14px 16px;
+              border-right: {% if not loop.last %}1px solid var(--border){% else %}none{% endif %};
+              text-align: center;
+            ">
+              <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase;
+                          letter-spacing:0.06em; margin-bottom:6px;">
+                {{ label }}
+              </div>
+              {% if label == 'Transactions' %}
+                <div style="font-size:1.05rem; font-weight:600; color:{{ color }};">
+                  {{ val or 0 }}
+                </div>
+              {% elif val is none %}
+                <div style="font-size:0.82rem; color:var(--text-muted); font-style:italic;">
+                  Not set
+                </div>
+              {% else %}
+                <div style="font-size:1.05rem; font-weight:600; color:{{ color }};">
+                  ₹ {{ "%.2f"|format(val|float) }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align:center; padding:48px 24px;">
+    <div style="font-size:2.5rem; margin-bottom:12px;">🏦</div>
+    <p style="color:var(--text-muted); margin:0 0 16px 0;">
+      No bank accounts yet. Add your first account to get started.
+    </p>
+    <button class="btn btn-primary" onclick="openModal('addAccountModal')">
+      + Add Bank Account
+    </button>
+  </div>
+{% endif %}
+
+
+<!-- ══════════════ ADD ACCOUNT MODAL ══════════════ -->
+<div id="addAccountModal" class="modal-overlay" style="display:none;">
+  <div class="modal modal--sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Add Bank Account</h2>
+      <button class="modal-close" onclick="closeModal('addAccountModal')">×</button>
+    </div>
+    <form method="post" action="{{ url_for('bank_accounts.add') }}" class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Account Name *</label>
+        <input
+          type="text"
+          name="name"
+          class="input-text"
+          maxlength="100"
+          required
+          placeholder="e.g. HDFC Bank"
+        />
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Account Number</label>
+        <input
+          type="text"
+          name="account_number"
+          class="input-text"
+          maxlength="50"
+          placeholder="e.g. XXXX1234 (optional)"
+        />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('addAccountModal')">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Save Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══════════════ EDIT ACCOUNT MODAL ══════════════ -->
+<div id="editAccountModal" class="modal-overlay" style="display:none;">
+  <div class="modal modal--sm">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Bank Account</h2>
+      <button class="modal-close" onclick="closeModal('editAccountModal')">×</button>
+    </div>
+    <form id="editAccountForm" method="post" action="" class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Account Name *</label>
+        <input
+          type="text"
+          id="editAccountName"
+          name="name"
+          class="input-text"
+          maxlength="100"
+          required
+        />
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">Account Number</label>
+        <input
+          type="text"
+          id="editAccountNumber"
+          name="account_number"
+          class="input-text"
+          maxlength="50"
+          placeholder="Optional"
+        />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('editAccountModal')">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Update Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══════════════ MANAGE / OPENING BALANCE MODAL ══════════════ -->
+<div id="manageModal" class="modal-overlay" style="display:none;">
+  <div class="modal modal--sm">
+    <div class="modal-header">
+      <h2 class="modal-title" id="manageModalTitle">Manage Account</h2>
+      <button class="modal-close" onclick="closeModal('manageModal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Opening balance form -->
+      <form id="openingBalanceForm" method="post" action="">
+        <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 14px 0;">
+          Today's Opening Balance
+        </p>
+        <div class="form-group">
+          <label class="form-label">Opening Balance *</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">₹</span>
+            <input
+              type="number"
+              id="manageOpeningBalance"
+              name="opening_balance"
+              step="0.01"
+              min="0"
+              class="input-text input-with-prefix"
+              required
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <button type="submit" class="btn btn-primary" style="width:100%;">
+            Save Opening Balance
+          </button>
+        </div>
+      </form>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;" />
+
+      <!-- Deactivate -->
+      <form id="deactivateForm" method="post" action=""
+            onsubmit="return confirm('Deactivate this account? It will no longer appear for new transactions, but all historical data is preserved.')">
+        <button type="submit" class="btn btn-danger" style="width:100%;">
+          Deactivate Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// Close on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.style.display = 'none';
+  });
+});
+
+function openEditModal(accountId, name, accountNumber) {
+  document.getElementById('editAccountName').value   = name;
+  document.getElementById('editAccountNumber').value = accountNumber;
+  document.getElementById('editAccountForm').action  =
+    '/bank-accounts/' + accountId + '/edit';
+  openModal('editAccountModal');
+}
+
+function openManageModal(accountId, name, openingBalance) {
+  document.getElementById('manageModalTitle').textContent = name;
+  document.getElementById('manageOpeningBalance').value   =
+    openingBalance > 0 ? openingBalance.toFixed(2) : '';
+  document.getElementById('openingBalanceForm').action =
+    '/bank-accounts/' + accountId + '/opening-balance';
+  document.getElementById('deactivateForm').action =
+    '/bank-accounts/' + accountId + '/deactivate';
+  openModal('manageModal');
+}
+</script>
+{% endblock %}

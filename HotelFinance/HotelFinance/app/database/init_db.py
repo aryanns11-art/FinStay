@@ -15,6 +15,10 @@ from app.models.daily_summary import DailySummary
 from app.models.settings import Settings
 from app.models.daily_balance import DailyBalance
 
+# New bank-account models — must be imported so SQLAlchemy registers them
+from app.models.bank_account import BankAccount          # noqa: F401
+from app.models.bank_daily_balance import BankDailyBalance  # noqa: F401
+
 
 def _ensure_settings_columns():
     """Add hotel-info columns if an older SQLite settings table is missing them."""
@@ -45,7 +49,31 @@ def _ensure_settings_columns():
                 )
 
 
+def _ensure_transaction_bank_account_column():
+    """
+    Safely add bank_account_id column to existing transactions table.
+
+    SQLite does not support ALTER TABLE … ADD COLUMN with a FOREIGN KEY
+    constraint inline, but it does allow adding a plain nullable column.
+    The foreign-key relationship is enforced at the ORM level.
+    Existing rows keep NULL which is correct for Cash transactions.
+    """
+    inspector = inspect(engine)
+
+    if "transactions" not in inspector.get_table_names():
+        return  # table will be created fresh by create_all()
+
+    existing = {col["name"] for col in inspector.get_columns("transactions")}
+
+    if "bank_account_id" not in existing:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE transactions ADD COLUMN bank_account_id INTEGER")
+            )
+
+
 def create_tables():
     Base.metadata.create_all(bind=engine)
     _ensure_settings_columns()
+    _ensure_transaction_bank_account_column()
     print("Database tables created successfully.")

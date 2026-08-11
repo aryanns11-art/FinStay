@@ -2,6 +2,7 @@
 
 from datetime import date, datetime, time
 from decimal import Decimal
+from typing import Optional
 
 from sqlalchemy import (Date, DateTime, ForeignKey, Integer, Numeric, String, Text, Time,)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -63,6 +64,12 @@ class Transaction(Base):
         nullable=False,
     )
 
+    # Nullable — Cash transactions will have NULL here
+    bank_account_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("bank_accounts.id"),
+        nullable=True,
+    )
+
     category = relationship(
         "Category",
         back_populates="transactions",
@@ -71,4 +78,10 @@ class Transaction(Base):
     payment_method = relationship(
         "PaymentMethod",
         back_populates="transactions",
+    )
+
+    bank_account = relationship(
+        "BankAccount",
+        back_populates="transactions",
+        foreign_keys=[bank_account_id],
     )

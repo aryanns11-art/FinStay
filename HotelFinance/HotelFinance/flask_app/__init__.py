@@ -36,11 +36,13 @@ def create_app():
     from flask_app.routes.cash import bp as cash_bp
     from flask_app.routes.reports import bp as reports_bp
     from flask_app.routes.settings import bp as settings_bp
+    from flask_app.routes.bank_accounts import bp as bank_accounts_bp
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(transactions_bp)
     app.register_blueprint(cash_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(bank_accounts_bp)
 
     return app

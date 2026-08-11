@@ -32,6 +32,11 @@
       <span class="nav-icon">💵</span>
       <span class="nav-label">Cash Management</span>
     </a>
+    <a href="{{ url_for('bank_accounts.index') }}"
+       class="nav-item {% if request.endpoint and request.endpoint.startswith('bank_accounts') %}active{% endif %}">
+      <span class="nav-icon">🏦</span>
+      <span class="nav-label">Bank Accounts</span>
+    </a>
     <a href="{{ url_for('reports.index') }}"
        class="nav-item {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}">
       <span class="nav-icon">📈</span>
