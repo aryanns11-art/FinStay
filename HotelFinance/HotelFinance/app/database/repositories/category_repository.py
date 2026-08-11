@@ -1,5 +1,6 @@
 from app.database.repositories.base_repository import BaseRepository
 from app.models.category import Category
+from app.models.transaction import Transaction
 
 
 class CategoryRepository(BaseRepository):
@@ -15,6 +16,7 @@ class CategoryRepository(BaseRepository):
         return (
             self.session.query(Category)
             .filter(Category.type == "Income")
+            .order_by(Category.name)
             .all()
         )
 
@@ -22,6 +24,7 @@ class CategoryRepository(BaseRepository):
         return (
             self.session.query(Category)
             .filter(Category.type == "Expense")
+            .order_by(Category.name)
             .all()
         )
 
@@ -33,3 +36,30 @@ class CategoryRepository(BaseRepository):
         )
 
         return self.add(category)
+
+    def delete_category(self, category_id):
+        category = (
+            self.session.query(Category)
+            .filter(Category.id == category_id)
+            .first()
+        )
+
+        if not category:
+            raise ValueError("Category not found.")
+
+        transaction_exists = (
+            self.session.query(Transaction.id)
+            .filter(Transaction.category_id == category_id)
+            .first()
+            is not None
+        )
+
+        if transaction_exists:
+            raise ValueError(
+                "This category cannot be deleted because it is used by existing transactions."
+            )
+
+        self.delete(category)
+        self.session.commit()
+
+        return True

@@ -121,7 +121,31 @@ def add_category():
         )
 
     return redirect(url_for("transactions.index"))
-    
+
+
+@bp.route("/categories/delete/<int:category_id>", methods=["POST"])
+def delete_category(category_id):
+    session = db_session()
+
+    try:
+        categories = CategoryController(session)
+        categories.delete_category(category_id)
+
+        flash("Category deleted successfully.", "success")
+
+    except ValueError as e:
+        session.rollback()
+        flash(str(e), "error")
+
+    except Exception:
+        session.rollback()
+
+        from app.utils.logger import logger
+        logger.exception("Delete category error")
+
+        flash("Unable to delete category.", "error")
+
+    return redirect(url_for("transactions.index"))
 
 
 @bp.route("/transactions/delete/<int:transaction_id>", methods=["POST"])

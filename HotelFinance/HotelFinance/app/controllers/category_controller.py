@@ -15,3 +15,6 @@ class CategoryController:
             name=name,
             category_type=category_type,
         )
+    
+    def delete_category(self, category_id):
+        return self.service.delete_category(category_id)

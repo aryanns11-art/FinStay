@@ -142,6 +142,54 @@
 
 
 <!-- ══════════════ ADD CATEGORY MODAL ══════════════ -->
+
+<div style="margin-bottom: 20px;">
+  <h3 class="section-title">Existing Categories</h3>
+
+  {% if categories %}
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      {% for cat in categories %}
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          padding:10px 12px;
+          background:var(--surface-2);
+          border:1px solid var(--border);
+          border-radius:var(--radius);
+        ">
+
+          <div>
+            <span class="badge badge--{{ 'income' if cat.type == 'Income' else 'expense' }}">
+              {{ cat.type }}
+            </span>
+
+            <span style="margin-left:8px;">
+              {{ cat.name }}
+            </span>
+          </div>
+
+          <form
+            method="post"
+            action="{{ url_for('transactions.delete_category', category_id=cat.id) }}"
+            onsubmit="return confirm('Delete the category &quot;{{ cat.name }}&quot;?')">
+
+            <button type="submit" class="btn btn-danger btn-sm">
+              Delete
+            </button>
+
+          </form>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color:var(--text-muted);">
+      No categories available.
+    </p>
+  {% endif %}
+</div>
+
 <div id="categoryModal" class="modal-overlay" style="display:none;">
   <div class="modal modal--sm">
 
