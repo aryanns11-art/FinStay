@@ -9,3 +9,9 @@ class CategoryController:
 
     def get_categories(self):
         return self.service.get_categories()
+
+    def create_category(self, name, category_type):
+        return self.service.create_category(
+            name=name,
+            category_type=category_type,
+        )

@@ -86,6 +86,44 @@ def add():
     return redirect(url_for("transactions.index"))
 
 
+@bp.route("/categories/add", methods=["POST"])
+def add_category():
+    session = db_session()
+
+    try:
+        name = request.form.get("category_name", "").strip()
+        category_type = request.form.get("category_type", "").strip()
+
+        categories = CategoryController(session)
+
+        categories.create_category(
+            name=name,
+            category_type=category_type,
+        )
+
+        flash(
+            f"{category_type} category '{name}' added successfully.",
+            "success",
+        )
+
+    except ValueError as e:
+        flash(str(e), "error")
+
+    except Exception:
+        session.rollback()
+
+        from app.utils.logger import logger
+        logger.exception("Add category error")
+
+        flash(
+            "Unable to add category. The category may already exist.",
+            "error",
+        )
+
+    return redirect(url_for("transactions.index"))
+    
+
+
 @bp.route("/transactions/delete/<int:transaction_id>", methods=["POST"])
 def delete(transaction_id):
     session = db_session()

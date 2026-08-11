@@ -24,3 +24,12 @@ class CategoryRepository(BaseRepository):
             .filter(Category.type == "Expense")
             .all()
         )
+
+    def create_category(self, name, category_type):
+        category = Category(
+            name=name,
+            type=category_type,
+            is_default=False,
+        )
+
+        return self.add(category)
