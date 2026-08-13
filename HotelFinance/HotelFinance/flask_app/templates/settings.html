@@ -46,6 +46,45 @@
       <button type="submit" class="btn btn-primary">Save Changes</button>
     </div>
   </form>
+
+  {% for field in custom_fields or [] %}
+  <div class="form-group form-group--full" style="margin-top:16px;">
+    <div style="display:flex; align-items:flex-end; gap:12px;">
+      <div style="flex:1;">
+        <label class="form-label">{{ field.name }}</label>
+        <input type="text" class="input-text" value="{{ field.value }}" readonly />
+      </div>
+      <form method="post" action="{{ url_for('settings.delete_custom_field', field_id=field.id) }}" style="margin:0;">
+        <button type="submit" class="btn btn-secondary" onclick="return confirm('Delete this custom field?')">Delete</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div id="custom-field-form-wrapper" class="form-group form-group--full" style="display:none; margin-top:16px;">
+    <div class="card" style="padding:16px; border:1px solid #d4d4d8; background:#fff;">
+      <form method="post" action="{{ url_for('settings.add_custom_field') }}">
+        <div class="form-grid" style="grid-template-columns: repeat(2, minmax(220px, 1fr)); gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Field Name</label>
+            <input type="text" name="field_name" class="input-text" placeholder="Field Name" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Field Value</label>
+            <input type="text" name="field_value" class="input-text" placeholder="Field Value" required />
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+          <button type="button" class="btn btn-secondary" onclick="toggleCustomFieldForm(false)">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="form-group form-group--full" style="margin-top:12px;">
+    <button type="button" class="btn btn-secondary" onclick="toggleCustomFieldForm(true)">+ Add Field</button>
+  </div>
 </div>
 
 <!-- ── Backup ── -->
@@ -62,8 +101,39 @@
     </table>
   </div>
 
-  <form method="post" action="{{ url_for('settings.backup') }}" style="display:inline;">
-    <button type="submit" class="btn btn-secondary">Backup Database</button>
-  </form>
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <form method="post" action="{{ url_for('settings.backup') }}" style="display:inline;">
+      <button type="submit" class="btn btn-secondary">Backup Database</button>
+    </form>
+
+    <form id="restore-form" method="post" action="{{ url_for('settings.restore') }}" enctype="multipart/form-data" style="display:inline;">
+      <input id="restore-file-input" type="file" name="backup_file" accept=".db,*.db" style="display:none;" />
+      <button type="button" class="btn btn-secondary" onclick="triggerRestoreFilePicker()">Restore Database</button>
+    </form>
+  </div>
 </div>
+
+<script>
+  function toggleCustomFieldForm(show) {
+    const formWrapper = document.getElementById('custom-field-form-wrapper');
+    if (!formWrapper) return;
+    formWrapper.style.display = show ? 'block' : 'none';
+
+    if (show) {
+      const fieldNameInput = formWrapper.querySelector('input[name="field_name"]');
+      if (fieldNameInput) fieldNameInput.focus();
+    }
+  }
+
+  function triggerRestoreFilePicker() {
+    const input = document.getElementById('restore-file-input');
+    if (!input) return;
+    input.onchange = function () {
+      if (input.files && input.files.length) {
+        document.getElementById('restore-form').submit();
+      }
+    };
+    input.click();
+  }
+</script>
 {% endblock %}

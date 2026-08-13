@@ -1,8 +1,10 @@
 import logging
 from pathlib import Path
 
-LOG_DIR = Path("logs")
-LOG_DIR.mkdir(exist_ok=True)
+from config import BASE_DIR
+
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     filename=LOG_DIR / "hotel_finance.log",

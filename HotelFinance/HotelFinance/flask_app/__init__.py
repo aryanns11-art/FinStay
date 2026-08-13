@@ -10,6 +10,7 @@ from sqlalchemy.orm import scoped_session
 
 from app.database.session import SessionLocal
 from app.database.init_db import create_tables
+from app.database.seed import seed_database
 
 
 # Per-request database session — created once here, used everywhere
@@ -24,6 +25,12 @@ def create_app():
 
     # Ensure tables exist (safe to call on every startup — checks before creating)
     create_tables()
+
+    session = db_session()
+    try:
+        seed_database(session)
+    finally:
+        db_session.remove()
 
     # Tear down the scoped session after every request
     @app.teardown_appcontext

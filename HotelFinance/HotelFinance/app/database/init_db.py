@@ -14,6 +14,7 @@ from app.models.cash_denomination import CashDenomination
 from app.models.daily_summary import DailySummary
 from app.models.settings import Settings
 from app.models.daily_balance import DailyBalance
+from app.models.custom_field import CustomField  # noqa: F401
 
 # New bank-account models — must be imported so SQLAlchemy registers them
 from app.models.bank_account import BankAccount          # noqa: F401
